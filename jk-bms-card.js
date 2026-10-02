@@ -140,14 +140,10 @@ class JkBmsCard extends HTMLElement {
             gap: 10px;
           }
 
-          /* Clickable values indicator */
+          /* Clickable values indicator - smooth cursor, no underline or flicker */
           .clickable-val {
             cursor: pointer;
-            transition: opacity 0.15s ease;
-          }
-          .clickable-val:hover {
-            opacity: 0.8;
-            text-decoration: underline;
+            user-select: none;
           }
         </style>
         <ha-card id="card-content"></ha-card>
@@ -183,8 +179,7 @@ class JkBmsCard extends HTMLElement {
       primary_green_color: "#2e7d32",
       time_color: "#2196f3",
       max_cell_color: "#2196f3",
-      min_cell_color: "#f44336",
-      sec2_value_color: "#ffffff"
+      min_cell_color: "#f44336"
     };
   }
 
@@ -209,7 +204,6 @@ class JkBmsCard extends HTMLElement {
     this._timeColor = this._config.time_color || '#2196f3';
     this._maxCellColor = this._config.max_cell_color || '#2196f3';
     this._minCellColor = this._config.min_cell_color || '#f44336';
-    this._sec2ValColor = this._config.sec2_value_color || '#ffffff';
 
     // Alignment
     this._sec2Align = this._config.sec2_align || 'center';
@@ -250,11 +244,24 @@ class JkBmsCard extends HTMLElement {
     return stateObj ? stateObj.state : defaultVal;
   }
 
+  getFormattedState(entityId) {
+    const rawState = this.getVal(entityId, '--');
+    if (rawState === 'on') return 'ON';
+    if (rawState === 'off') return 'OFF';
+    return rawState.toUpperCase();
+  }
+
   fireMoreInfo(entityId) {
     if (!entityId || !this._hass || !this._hass.states[entityId]) return;
     const event = new Event('hass-more-info', { bubbles: true, composed: true });
     event.detail = { entityId };
     this.dispatchEvent(event);
+  }
+
+  toggleSwitch(entityId) {
+    if (!entityId || !this._hass) return;
+    const isOff = this.getVal(entityId) === 'off';
+    this._hass.callService('switch', isOff ? 'turn_on' : 'turn_off', { entity_id: entityId });
   }
 
   render() {
@@ -271,16 +278,16 @@ class JkBmsCard extends HTMLElement {
     this.style.setProperty('--s3-scale', this._s3Scale);
     this.style.setProperty('--s4-scale', this._s4Scale);
 
-    const valColorSec2 = this._usePrimaryColorSec2 ? 'var(--primary-green-color)' : this._sec2ValColor;
+    const valColorSec2 = this._usePrimaryColorSec2 ? 'var(--primary-green-color)' : 'var(--primary-text-color, #ffffff)';
     this.style.setProperty('--sec2-val-final-color', valColorSec2);
 
     const bgClass = this._removeBg ? 'transparent-bg' : '';
 
-    // Entity Mappings for Section 1
+    // Entity Mappings for Section 1 (Binary Sensors)
     const entTime = this.getEntity('total_runtime_formatted', this._config.entity_total_runtime_formatted, 'sensor');
-    const entChargeState = this.getEntity('charging', this._config.entity_charging_state, 'sensor');
-    const entDischargeState = this.getEntity('discharging', this._config.entity_discharging_state, 'sensor');
-    const entBalancingState = this.getEntity('balancing', this._config.entity_balancing_state, 'sensor');
+    const entChargeState = this.getEntity('charging', this._config.entity_charging_state, 'binary_sensor');
+    const entDischargeState = this.getEntity('discharging', this._config.entity_discharging_state, 'binary_sensor');
+    const entBalancingState = this.getEntity('balancing', this._config.entity_balancing_state, 'binary_sensor');
 
     // Entity Mappings for Section 2 Header
     const entTotalV = this.getEntity('total_voltage', this._config.entity_total_voltage, 'sensor');
@@ -308,9 +315,9 @@ class JkBmsCard extends HTMLElement {
             Time: <span class="s1-time clickable-val" data-entity="${entTime}">${this.getVal(entTime)}</span>
           </div>
           <div class="s1-status-row">
-            <div>Charge: <span class="s1-status-val clickable-val" data-entity="${entChargeState}">${this.getVal(entChargeState).toUpperCase()}</span></div>
-            <div>Discharge: <span class="s1-status-val clickable-val" data-entity="${entDischargeState}">${this.getVal(entDischargeState).toUpperCase()}</span></div>
-            <div>Balance: <span class="s1-status-val clickable-val" data-entity="${entBalancingState}">${this.getVal(entBalancingState).toUpperCase()}</span></div>
+            <div>Charge: <span class="s1-status-val clickable-val" data-entity="${entChargeState}">${this.getFormattedState(entChargeState)}</span></div>
+            <div>Discharge: <span class="s1-status-val clickable-val" data-entity="${entDischargeState}">${this.getFormattedState(entDischargeState)}</span></div>
+            <div>Balance: <span class="s1-status-val clickable-val" data-entity="${entBalancingState}">${this.getFormattedState(entBalancingState)}</span></div>
           </div>
         </div>
       `;
@@ -405,6 +412,10 @@ class JkBmsCard extends HTMLElement {
 
     // --- SECTION 4 ---
     if (this._showS4) {
+      const balChecked = this.getVal(entSwBalancer) === 'on' ? 'checked' : '';
+      const chgChecked = this.getVal(entSwCharge) === 'on' ? 'checked' : '';
+      const disChecked = this.getVal(entSwDischarge) === 'on' ? 'checked' : '';
+
       html += `
         <div class="section ${bgClass} s4-container">
           <div class="s4-row">
@@ -412,21 +423,21 @@ class JkBmsCard extends HTMLElement {
               <ha-icon icon="mdi:scale-balance"></ha-icon>
               <span>Balancer</span>
             </div>
-            <ha-entity-toggle .hass=${this._hass} .stateObj=${this._hass.states[entSwBalancer]}></ha-entity-toggle>
+            <ha-switch ${balChecked} data-entity="${entSwBalancer}"></ha-switch>
           </div>
           <div class="s4-row">
             <div class="s4-left">
               <ha-icon icon="mdi:battery-charging"></ha-icon>
               <span>Charging</span>
             </div>
-            <ha-entity-toggle .hass=${this._hass} .stateObj=${this._hass.states[entSwCharge]}></ha-entity-toggle>
+            <ha-switch ${chgChecked} data-entity="${entSwCharge}"></ha-switch>
           </div>
           <div class="s4-row">
             <div class="s4-left">
               <ha-icon icon="mdi:battery-charging"></ha-icon>
               <span>Discharging</span>
             </div>
-            <ha-entity-toggle .hass=${this._hass} .stateObj=${this._hass.states[entSwDischarge]}></ha-entity-toggle>
+            <ha-switch ${disChecked} data-entity="${entSwDischarge}"></ha-switch>
           </div>
         </div>
       `;
@@ -443,9 +454,14 @@ class JkBmsCard extends HTMLElement {
       });
     });
 
-    // Pass hass reference to native HA toggle components
-    this.content.querySelectorAll('ha-entity-toggle').forEach(toggle => {
-      toggle.hass = this._hass;
+    // Attach switch toggle events
+    this.content.querySelectorAll('ha-switch').forEach(sw => {
+      sw.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const entity = sw.getAttribute('data-entity');
+        if (entity) this.toggleSwitch(entity);
+      });
     });
   }
 
@@ -497,44 +513,21 @@ class JkBmsCardEditor extends HTMLElement {
     sec2Items.forEach((item, idx) => {
       const decVal = item.decimals !== undefined ? item.decimals : 1;
       itemsHtml += `
-        <div class="sec2-item-card">
-          <div class="sec2-item-header">
-            <span class="sec2-item-title">Item ${idx + 1}</span>
-            <button class="btn-del" data-idx="${idx}">Remove</button>
+        <div style="border: 1px solid var(--divider-color, #444); border-radius: 6px; padding: 10px; margin-bottom: 10px; background: var(--card-background-color, #222);">
+          <div style="display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 1fr auto; gap: 6px; margin-bottom: 8px; align-items: center;">
+            <input type="text" placeholder="Label" value="${item.label || ''}" data-idx="${idx}" data-field="label" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;">
+            <input type="text" placeholder="Suffix" value="${item.entity_suffix || ''}" data-idx="${idx}" data-field="entity_suffix" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;">
+            <input type="text" placeholder="Unit" value="${item.unit || ''}" data-idx="${idx}" data-field="unit" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;">
+            <input type="number" placeholder="Dec" value="${decVal}" data-idx="${idx}" data-field="decimals" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;" title="Decimals">
+            <select data-idx="${idx}" data-field="column" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;">
+              <option value="1" ${item.column == 1 ? 'selected' : ''}>Col 1</option>
+              <option value="2" ${item.column == 2 ? 'selected' : ''}>Col 2</option>
+            </select>
+            <button class="btn-del" data-idx="${idx}" style="background:#f44336; color:#fff; border:none; border-radius:4px; padding:6px 10px; cursor:pointer;">X</button>
           </div>
-          
-          <div class="sec2-grid-row">
-            <div class="field-group">
-              <label>Label</label>
-              <input type="text" placeholder="e.g. Battery Power:" value="${item.label || ''}" data-idx="${idx}" data-field="label">
-            </div>
-            <div class="field-group">
-              <label>Suffix</label>
-              <input type="text" placeholder="e.g. power" value="${item.entity_suffix || ''}" data-idx="${idx}" data-field="entity_suffix">
-            </div>
-          </div>
-
-          <div class="sec2-grid-row triplet">
-            <div class="field-group">
-              <label>Unit</label>
-              <input type="text" placeholder="e.g. W" value="${item.unit || ''}" data-idx="${idx}" data-field="unit">
-            </div>
-            <div class="field-group">
-              <label>Decimals</label>
-              <input type="number" min="0" max="6" value="${decVal}" data-idx="${idx}" data-field="decimals">
-            </div>
-            <div class="field-group">
-              <label>Column</label>
-              <select data-idx="${idx}" data-field="column">
-                <option value="1" ${item.column == 1 ? 'selected' : ''}>Column 1</option>
-                <option value="2" ${item.column == 2 ? 'selected' : ''}>Column 2</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field-group" style="margin-top: 8px;">
-            <label>Override Entity (Optional)</label>
+          <div>
             <ha-entity-picker 
+              label="Override Entity (Optional)" 
               .hass=${this._hass} 
               .value="${item.entity || ''}" 
               data-idx="${idx}" 
@@ -560,69 +553,6 @@ class JkBmsCardEditor extends HTMLElement {
         .sec-title { font-size: 14px; font-weight: bold; margin: 16px 0 8px 0; border-bottom: 1px solid var(--divider-color, #444); padding-bottom: 4px; color: var(--primary-text-color, #fff); }
         .chk-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; }
         .chk-row label { cursor: pointer; font-size: 13px; }
-
-        /* Section 2 Structured Grid Editor */
-        .sec2-item-card {
-          border: 1px solid var(--divider-color, #444);
-          border-radius: 8px;
-          padding: 10px;
-          margin-bottom: 12px;
-          background: var(--card-background-color, #222);
-          box-sizing: border-box;
-          width: 100%;
-        }
-        .sec2-item-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
-        }
-        .sec2-item-title {
-          font-weight: bold;
-          font-size: 12px;
-          color: var(--secondary-text-color, #aaa);
-          text-transform: uppercase;
-        }
-        .sec2-grid-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
-          margin-bottom: 8px;
-        }
-        .sec2-grid-row.triplet {
-          grid-template-columns: 1fr 1fr 1fr;
-        }
-        .field-group {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-        .field-group label {
-          font-size: 11px;
-          color: var(--secondary-text-color, #aaa);
-        }
-        .field-group input, .field-group select {
-          padding: 6px;
-          border-radius: 4px;
-          border: 1px solid #555;
-          background: #111;
-          color: #fff;
-          font-size: 12px;
-          width: 100%;
-          box-sizing: border-box;
-        }
-        .btn-del {
-          background: #f44336;
-          color: #fff;
-          border: none;
-          border-radius: 4px;
-          padding: 4px 8px;
-          font-size: 11px;
-          cursor: pointer;
-        }
-        .btn-del:hover {
-          background: #d32f2f;
-        }
       </style>
       <div>
         <div class="sec-title">General Settings</div>
@@ -717,7 +647,6 @@ class JkBmsCardEditor extends HTMLElement {
         <div class="editor-row"><label>Uptime Header Color:</label><input type="color" id="time_color" value="${this._config.time_color || '#2196f3'}"></div>
         <div class="editor-row"><label>Highest Cell Color:</label><input type="color" id="max_cell_color" value="${this._config.max_cell_color || '#2196f3'}"></div>
         <div class="editor-row"><label>Lowest Cell Color:</label><input type="color" id="min_cell_color" value="${this._config.min_cell_color || '#f44336'}"></div>
-        <div class="editor-row"><label>Section 2 Values Custom Color:</label><input type="color" id="sec2_value_color" value="${this._config.sec2_value_color || '#ffffff'}"></div>
 
         <div class="sec-title">Section 2 Items & Dynamic Configuration</div>
         <div id="sec2-items-container">${itemsHtml}</div>
