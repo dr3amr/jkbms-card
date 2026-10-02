@@ -1,6 +1,6 @@
 /**
- * JK-BMS Custom Lovelace Card (v1.2.1)
- * Replicates JK-BMS App UI with Fixed UI Editor Controls & Corrected Section 2 Color Mapping
+ * JK-BMS Custom Lovelace Card (v1.3.0)
+ * Replicates JK-BMS App UI with Per-Item Decimal Configuration in Section 2
  */
 
 // --- HELPER FUNCTION FOR DECIMAL FORMATTING ---
@@ -172,7 +172,6 @@ class JkBmsCard extends HTMLElement {
       show_section_4: true,
       show_cells_title: true,
       sec2_align: "center",
-      sec2_decimals: 1,
       sec3_decimals: 1,
       s1_scale: 1.0,
       s2_scale: 1.0,
@@ -194,7 +193,6 @@ class JkBmsCard extends HTMLElement {
     this._prefix = this._config.prefix || 'jk-bms';
     
     // Formatting & Scaling
-    this._sec2Decimals = this._config.sec2_decimals !== undefined ? parseInt(this._config.sec2_decimals, 10) : 1;
     this._sec3Decimals = this._config.sec3_decimals !== undefined ? parseInt(this._config.sec3_decimals, 10) : 1;
     
     this._s1Scale = this._config.s1_scale || 1.0;
@@ -225,20 +223,20 @@ class JkBmsCard extends HTMLElement {
     
     this._cellCount = parseInt(this._config.cell_count || 16, 10);
 
-    // Default Section 2 Items
+    // Default Section 2 Items (With per-item decimals support)
     this._sec2Items = this._config.sec2_items || [
-      { label: 'Battery Power:', entity_suffix: 'power', unit: 'W', column: 1 },
-      { label: 'Remain Battery:', entity_suffix: 'state_of_charge', unit: '%', column: 2 },
-      { label: 'Battery Capacity:', entity_suffix: 'full_charge_capacity', unit: 'Ah', column: 1 },
-      { label: 'Remain Capacity:', entity_suffix: 'capacity_remaining', unit: 'Ah', column: 2 },
-      { label: 'Cycle Capacity:', entity_suffix: 'total_charging_cycle_capacity', unit: 'Ah', column: 1 },
-      { label: 'Cycle Count:', entity_suffix: 'charging_cycles', unit: '', column: 2 },
-      { label: 'Ave. Cell Vol.:', entity_suffix: 'average_cell_voltage', unit: 'V', column: 1 },
-      { label: 'Delta Cell Vol.:', entity_suffix: 'delta_cell_voltage', unit: 'V', column: 2 },
-      { label: 'Balance Cur.:', entity_suffix: 'balancing_current', unit: 'A', column: 1 },
-      { label: 'MOS Temp.:', entity_suffix: 'mosfet_temperature', unit: '°C', column: 2 },
-      { label: 'Battery T1:', entity_suffix: 'temperature_sensor_1', unit: '°C', column: 1 },
-      { label: 'Battery T2:', entity_suffix: 'temperature_sensor_2', unit: '°C', column: 2 }
+      { label: 'Battery Power:', entity_suffix: 'power', unit: 'W', decimals: 1, column: 1 },
+      { label: 'Remain Battery:', entity_suffix: 'state_of_charge', unit: '%', decimals: 1, column: 2 },
+      { label: 'Battery Capacity:', entity_suffix: 'full_charge_capacity', unit: 'Ah', decimals: 1, column: 1 },
+      { label: 'Remain Capacity:', entity_suffix: 'capacity_remaining', unit: 'Ah', decimals: 1, column: 2 },
+      { label: 'Cycle Capacity:', entity_suffix: 'total_charging_cycle_capacity', unit: 'Ah', decimals: 1, column: 1 },
+      { label: 'Cycle Count:', entity_suffix: 'charging_cycles', unit: '', decimals: 0, column: 2 },
+      { label: 'Ave. Cell Vol.:', entity_suffix: 'average_cell_voltage', unit: 'V', decimals: 3, column: 1 },
+      { label: 'Delta Cell Vol.:', entity_suffix: 'delta_cell_voltage', unit: 'V', decimals: 3, column: 2 },
+      { label: 'Balance Cur.:', entity_suffix: 'balancing_current', unit: 'A', decimals: 2, column: 1 },
+      { label: 'MOS Temp.:', entity_suffix: 'mosfet_temperature', unit: '°C', decimals: 1, column: 2 },
+      { label: 'Battery T1:', entity_suffix: 'temperature_sensor_1', unit: '°C', decimals: 1, column: 1 },
+      { label: 'Battery T2:', entity_suffix: 'temperature_sensor_2', unit: '°C', decimals: 1, column: 2 }
     ];
   }
 
@@ -284,7 +282,6 @@ class JkBmsCard extends HTMLElement {
     this.style.setProperty('--s3-scale', this._s3Scale);
     this.style.setProperty('--s4-scale', this._s4Scale);
 
-    // Corrected Section 2 Value Color: Maps to Primary Status Color when enabled
     const valColorSec2 = this._usePrimaryColorSec2 ? 'var(--primary-green-color)' : this._sec2ValColor;
     this.style.setProperty('--sec2-val-final-color', valColorSec2);
 
@@ -338,7 +335,10 @@ class JkBmsCard extends HTMLElement {
       this._sec2Items.forEach((item, index) => {
         const entId = item.entity || this.getEntity(item.entity_suffix);
         const rawVal = this.getVal(entId);
-        const formattedVal = formatNumber(rawVal, this._sec2Decimals);
+        
+        // Per-item decimal formatting
+        const itemDecimals = item.decimals !== undefined && item.decimals !== '' ? parseInt(item.decimals, 10) : 1;
+        const formattedVal = formatNumber(rawVal, itemDecimals);
         const unitStr = item.unit ? ` ${item.unit}` : '';
 
         const itemHtml = `
@@ -353,8 +353,8 @@ class JkBmsCard extends HTMLElement {
         else col2Html += itemHtml;
       });
 
-      const totalVFormatted = formatNumber(this.getVal(entTotalV), this._sec2Decimals);
-      const currentFormatted = formatNumber(this.getVal(entCurrent), this._sec2Decimals);
+      const totalVFormatted = formatNumber(this.getVal(entTotalV), 1);
+      const currentFormatted = formatNumber(this.getVal(entCurrent), 1);
 
       html += `
         <div class="section ${bgClass} s2-container">
@@ -512,28 +512,30 @@ class JkBmsCardEditor extends HTMLElement {
     this.hasRendered = true;
 
     const sec2Items = this._config.sec2_items || [
-      { label: 'Battery Power:', entity_suffix: 'power', unit: 'W', column: 1 },
-      { label: 'Remain Battery:', entity_suffix: 'state_of_charge', unit: '%', column: 2 },
-      { label: 'Battery Capacity:', entity_suffix: 'full_charge_capacity', unit: 'Ah', column: 1 },
-      { label: 'Remain Capacity:', entity_suffix: 'capacity_remaining', unit: 'Ah', column: 2 },
-      { label: 'Cycle Capacity:', entity_suffix: 'total_charging_cycle_capacity', unit: 'Ah', column: 1 },
-      { label: 'Cycle Count:', entity_suffix: 'charging_cycles', unit: '', column: 2 },
-      { label: 'Ave. Cell Vol.:', entity_suffix: 'average_cell_voltage', unit: 'V', column: 1 },
-      { label: 'Delta Cell Vol.:', entity_suffix: 'delta_cell_voltage', unit: 'V', column: 2 },
-      { label: 'Balance Cur.:', entity_suffix: 'balancing_current', unit: 'A', column: 1 },
-      { label: 'MOS Temp.:', entity_suffix: 'mosfet_temperature', unit: '°C', column: 2 },
-      { label: 'Battery T1:', entity_suffix: 'temperature_sensor_1', unit: '°C', column: 1 },
-      { label: 'Battery T2:', entity_suffix: 'temperature_sensor_2', unit: '°C', column: 2 }
+      { label: 'Battery Power:', entity_suffix: 'power', unit: 'W', decimals: 1, column: 1 },
+      { label: 'Remain Battery:', entity_suffix: 'state_of_charge', unit: '%', decimals: 1, column: 2 },
+      { label: 'Battery Capacity:', entity_suffix: 'full_charge_capacity', unit: 'Ah', decimals: 1, column: 1 },
+      { label: 'Remain Capacity:', entity_suffix: 'capacity_remaining', unit: 'Ah', decimals: 1, column: 2 },
+      { label: 'Cycle Capacity:', entity_suffix: 'total_charging_cycle_capacity', unit: 'Ah', decimals: 1, column: 1 },
+      { label: 'Cycle Count:', entity_suffix: 'charging_cycles', unit: '', decimals: 0, column: 2 },
+      { label: 'Ave. Cell Vol.:', entity_suffix: 'average_cell_voltage', unit: 'V', decimals: 3, column: 1 },
+      { label: 'Delta Cell Vol.:', entity_suffix: 'delta_cell_voltage', unit: 'V', decimals: 3, column: 2 },
+      { label: 'Balance Cur.:', entity_suffix: 'balancing_current', unit: 'A', decimals: 2, column: 1 },
+      { label: 'MOS Temp.:', entity_suffix: 'mosfet_temperature', unit: '°C', decimals: 1, column: 2 },
+      { label: 'Battery T1:', entity_suffix: 'temperature_sensor_1', unit: '°C', decimals: 1, column: 1 },
+      { label: 'Battery T2:', entity_suffix: 'temperature_sensor_2', unit: '°C', decimals: 1, column: 2 }
     ];
 
     let itemsHtml = '';
     sec2Items.forEach((item, idx) => {
+      const decVal = item.decimals !== undefined ? item.decimals : 1;
       itemsHtml += `
         <div style="border: 1px solid var(--divider-color, #444); border-radius: 6px; padding: 10px; margin-bottom: 10px; background: var(--card-background-color, #222);">
           <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
             <input type="text" placeholder="Label" value="${item.label || ''}" data-idx="${idx}" data-field="label" style="flex: 2; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
             <input type="text" placeholder="Suffix" value="${item.entity_suffix || ''}" data-idx="${idx}" data-field="entity_suffix" style="flex: 2; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
             <input type="text" placeholder="Unit" value="${item.unit || ''}" data-idx="${idx}" data-field="unit" style="flex: 1; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
+            <input type="number" placeholder="Dec" value="${decVal}" data-idx="${idx}" data-field="decimals" style="width: 50px; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;" title="Decimals">
             <select data-idx="${idx}" data-field="column" style="flex: 1; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
               <option value="1" ${item.column == 1 ? 'selected' : ''}>Col 1</option>
               <option value="2" ${item.column == 2 ? 'selected' : ''}>Col 2</option>
@@ -583,15 +585,9 @@ class JkBmsCardEditor extends HTMLElement {
         </div>
 
         <div class="sec-title">Formatting & Decimals</div>
-        <div class="editor-row-half">
-          <div class="editor-col">
-            <label>Section 2 Decimals:</label>
-            <input type="number" id="sec2_decimals" value="${this._config.sec2_decimals !== undefined ? this._config.sec2_decimals : 1}">
-          </div>
-          <div class="editor-col">
-            <label>Section 3 Cell Decimals:</label>
-            <input type="number" id="sec3_decimals" value="${this._config.sec3_decimals !== undefined ? this._config.sec3_decimals : 1}">
-          </div>
+        <div class="editor-row">
+          <label>Section 3 Cell Decimals:</label>
+          <input type="number" id="sec3_decimals" value="${this._config.sec3_decimals !== undefined ? this._config.sec3_decimals : 1}">
         </div>
 
         <div class="sec-title">Section Scaling (Font Size)</div>
@@ -676,9 +672,11 @@ class JkBmsCardEditor extends HTMLElement {
       </div>
     `;
 
-    // Bind inputs
+    // Bind global inputs
     this.querySelectorAll('input[type="text"], input[type="number"], input[type="color"], select#sec2_align').forEach(el => {
-      el.addEventListener('change', this._valueChanged.bind(this));
+      if (!el.getAttribute('data-field')) {
+        el.addEventListener('change', this._valueChanged.bind(this));
+      }
     });
 
     // Instant click updates for checkboxes
@@ -686,14 +684,16 @@ class JkBmsCardEditor extends HTMLElement {
       el.addEventListener('click', this._checkboxChanged.bind(this));
     });
 
-    // Bind Section 2 dynamic updates
+    // Bind Section 2 dynamic items updates
     this.querySelectorAll('#sec2-items-container input, #sec2-items-container select, #sec2-items-container ha-entity-picker').forEach(el => {
       el.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-idx');
         const field = e.target.getAttribute('data-field');
-        const currentItems = [...sec2Items];
-        currentItems[idx][field] = e.target.value;
-        this._updateConfig('sec2_items', currentItems);
+        if (idx !== null && field) {
+          const currentItems = [...sec2Items];
+          currentItems[idx][field] = e.target.value;
+          this._updateConfig('sec2_items', currentItems);
+        }
       });
     });
 
@@ -712,7 +712,7 @@ class JkBmsCardEditor extends HTMLElement {
     if (btnAdd) {
       btnAdd.addEventListener('click', () => {
         const currentItems = [...sec2Items];
-        currentItems.push({ label: 'New Label:', entity_suffix: '', unit: '', column: 1 });
+        currentItems.push({ label: 'New Label:', entity_suffix: '', unit: '', decimals: 1, column: 1 });
         this._updateConfig('sec2_items', currentItems);
       });
     }
