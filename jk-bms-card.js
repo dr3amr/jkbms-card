@@ -1,6 +1,6 @@
 /**
- * JK-BMS Custom Lovelace Card (v1.6.2)
- * Centered text alignment for cell rows in Section 3.
+ * JK-BMS Custom Lovelace Card (v1.6.4)
+ * Reduced Section 2 and Section 3 column gaps by half for improved mobile responsiveness.
  */
 
 function formatNumber(val, decimals = 1) {
@@ -54,7 +54,7 @@ class JkBmsCard extends HTMLElement {
             color: var(--primary-green-color, #2e7d32);
             margin-bottom: 4px;
           }
-          .s2-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+          .s2-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
           .s2-col { display: flex; flex-direction: column; gap: 4px; }
           .s2-item { display: flex; }
           .s2-item.align-center { justify-content: center; gap: 6px; }
@@ -64,10 +64,10 @@ class JkBmsCard extends HTMLElement {
           .s2-label { color: var(--primary-text-color, #ffffff); }
           .s2-val { color: var(--sec2-val-final-color, #ffffff); font-weight: 500; }
 
-          /* Section 3 (Centered column text applied here) */
+          /* Section 3 */
           .s3-container { font-size: calc(14.4px * var(--s3-scale, 1)); }
           .s3-title { text-align: center; font-weight: bold; font-size: calc(16.8px * var(--s3-scale, 1)); margin-bottom: 8px; }
-          .cells-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; row-gap: 4px; font-family: monospace; }
+          .cells-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; row-gap: 4px; font-family: monospace; }
           .cell-row { display: flex; justify-content: center; gap: 6px; }
           .cell-num { color: var(--primary-text-color, #ffffff); }
           .cell-v { color: var(--primary-text-color, #ffffff); }
@@ -344,7 +344,7 @@ class JkBmsCard extends HTMLElement {
 
     this.content.innerHTML = html;
 
-    // Attach Click Events once
+    // Attach Click Events
     this.content.querySelectorAll('.clickable-val').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -353,7 +353,7 @@ class JkBmsCard extends HTMLElement {
       });
     });
 
-    // Attach Switch Event Handlers once
+    // Attach Switch Event Handlers
     this.content.querySelectorAll('ha-switch').forEach(sw => {
       sw.addEventListener('change', (e) => {
         e.stopPropagation();
