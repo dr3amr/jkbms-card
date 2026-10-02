@@ -1,19 +1,19 @@
 /**
- * JK-BMS Custom Lovelace Card (v1.5.0)
- * Replicates JK-BMS App UI with 1.2x Scaled Base Typography & Native HA Switch Controls
+ * JK-BMS Custom Lovelace Card (v1.6.0)
+ * Fixed infinite re-render loop, hover intermittency, and switch control handlers.
  */
 
-// --- HELPER FUNCTION FOR DECIMAL FORMATTING ---
 function formatNumber(val, decimals = 1) {
   const num = parseFloat(val);
   if (isNaN(num)) return val;
   return num.toFixed(decimals);
 }
 
-// --- MAIN CARD CLASS ---
 class JkBmsCard extends HTMLElement {
   set hass(hass) {
+    const oldHass = this._hass;
     this._hass = hass;
+
     if (!this.content) {
       this.innerHTML = `
         <style>
@@ -35,36 +35,17 @@ class JkBmsCard extends HTMLElement {
             padding-left: 0;
             padding-right: 0;
           }
-          .section:last-child {
-            margin-bottom: 0;
-          }
+          .section:last-child { margin-bottom: 0; }
 
-          /* Section 1 - Base 15.6px (13px * 1.2) */
-          .s1-container {
-            font-size: calc(15.6px * var(--s1-scale, 1));
-          }
-          .s1-header {
-            text-align: center;
-            margin-bottom: 8px;
-            font-weight: 500;
-          }
-          .s1-time {
-            color: var(--time-color, #2196f3);
-            font-weight: bold;
-          }
-          .s1-status-row {
-            display: flex;
-            justify-content: space-around;
-          }
-          .s1-status-val {
-            color: var(--primary-green-color, #2e7d32);
-            font-weight: bold;
-          }
+          /* Section 1 */
+          .s1-container { font-size: calc(15.6px * var(--s1-scale, 1)); }
+          .s1-header { text-align: center; margin-bottom: 8px; font-weight: 500; }
+          .s1-time { color: var(--time-color, #2196f3); font-weight: bold; }
+          .s1-status-row { display: flex; justify-content: space-around; }
+          .s1-status-val { color: var(--primary-green-color, #2e7d32); font-weight: bold; }
 
-          /* Section 2 - Base 14.4px (12px * 1.2) / Header Base 28.8px (24px * 1.2) */
-          .s2-container {
-            font-size: calc(14.4px * var(--s2-scale, 1));
-          }
+          /* Section 2 */
+          .s2-container { font-size: calc(14.4px * var(--s2-scale, 1)); }
           .s2-main-vals {
             display: flex;
             justify-content: space-around;
@@ -73,85 +54,41 @@ class JkBmsCard extends HTMLElement {
             color: var(--primary-green-color, #2e7d32);
             margin-bottom: 8px;
           }
-          .s2-columns {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0 24px;
-          }
-          .s2-col {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-          }
-          .s2-item {
-            display: flex;
-            gap: 6px;
-          }
+          .s2-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+          .s2-col { display: flex; flex-direction: column; gap: 6px; }
+          .s2-item { display: flex; gap: 6px; }
           .s2-item.align-center { justify-content: center; }
           .s2-item.align-space-between { justify-content: space-between; }
           .s2-item.align-flex-start { justify-content: flex-start; }
           .s2-item.align-flex-end { justify-content: flex-end; }
           .s2-label { color: var(--primary-text-color, #ffffff); }
-          .s2-val {
-            color: var(--sec2-val-final-color, #ffffff);
-            font-weight: 500;
-          }
+          .s2-val { color: var(--sec2-val-final-color, #ffffff); font-weight: 500; }
 
-          /* Section 3 - Base 14.4px (12px * 1.2) */
-          .s3-container {
-            font-size: calc(14.4px * var(--s3-scale, 1));
-          }
-          .s3-title {
-            text-align: center;
-            font-weight: bold;
-            font-size: calc(16.8px * var(--s3-scale, 1));
-            margin-bottom: 8px;
-          }
-          .cells-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            column-gap: 28px;
-            row-gap: 4px;
-            font-family: monospace;
-          }
-          .cell-row {
-            display: flex;
-            justify-content: space-between;
-          }
+          /* Section 3 */
+          .s3-container { font-size: calc(14.4px * var(--s3-scale, 1)); }
+          .s3-title { text-align: center; font-weight: bold; font-size: calc(16.8px * var(--s3-scale, 1)); margin-bottom: 8px; }
+          .cells-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; row-gap: 4px; font-family: monospace; }
+          .cell-row { display: flex; justify-content: space-between; }
           .cell-num { color: var(--primary-text-color, #ffffff); }
           .cell-v { color: var(--primary-text-color, #ffffff); }
           .cell-v.max-v { color: var(--max-cell-color, #2196f3) !important; font-weight: bold; }
           .cell-v.min-v { color: var(--min-cell-color, #f44336) !important; font-weight: bold; }
           .cell-r { color: var(--primary-text-color, #ffffff); }
 
-          /* Section 4 - Base 15.6px (13px * 1.2) */
-          .s4-container {
-            font-size: calc(15.6px * var(--s4-scale, 1));
-          }
-          .s4-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 6px 0;
-          }
-          .s4-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          }
+          /* Section 4 */
+          .s4-container { font-size: calc(15.6px * var(--s4-scale, 1)); }
+          .s4-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+          .s4-left { display: flex; align-items: center; gap: 10px; }
 
-          /* Clickable values indicator - smooth cursor, no underline or flicker */
-          .clickable-val {
-            cursor: pointer;
-            user-select: none;
-          }
+          .clickable-val { cursor: pointer; user-select: none; }
         </style>
         <ha-card id="card-content"></ha-card>
       `;
       this.content = this.querySelector("#card-content");
+      this.buildDOM();
+    } else {
+      this.updateValues();
     }
-
-    this.render();
   }
 
   static getConfigElement() {
@@ -187,15 +124,12 @@ class JkBmsCard extends HTMLElement {
     this._config = Object.assign({}, config);
     this._prefix = this._config.prefix || 'jk-bms';
     
-    // Formatting & Scaling
     this._sec3Decimals = this._config.sec3_decimals !== undefined ? parseInt(this._config.sec3_decimals, 10) : 1;
-    
     this._s1Scale = this._config.s1_scale || 1.0;
     this._s2Scale = this._config.s2_scale || 1.0;
     this._s3Scale = this._config.s3_scale || 1.0;
     this._s4Scale = this._config.s4_scale || 1.0;
 
-    // Background & Colors
     this._removeBg = this._config.remove_section_bg === true;
     this._secBgColor = this._config.section_bg_color || '#121212';
     this._usePrimaryColorSec2 = this._config.use_primary_color_sec2 === true;
@@ -205,10 +139,8 @@ class JkBmsCard extends HTMLElement {
     this._maxCellColor = this._config.max_cell_color || '#2196f3';
     this._minCellColor = this._config.min_cell_color || '#f44336';
 
-    // Alignment
     this._sec2Align = this._config.sec2_align || 'center';
 
-    // Section Visibility
     this._showS1 = this._config.show_section_1 !== false;
     this._showS2 = this._config.show_section_2 !== false;
     this._showS3 = this._config.show_section_3 !== false;
@@ -217,7 +149,6 @@ class JkBmsCard extends HTMLElement {
     
     this._cellCount = parseInt(this._config.cell_count || 16, 10);
 
-    // Default Section 2 Items
     this._sec2Items = this._config.sec2_items || [
       { label: 'Battery Power:', entity_suffix: 'power', unit: 'W', decimals: 1, column: 1 },
       { label: 'Remain Battery:', entity_suffix: 'state_of_charge', unit: '%', decimals: 1, column: 2 },
@@ -232,6 +163,10 @@ class JkBmsCard extends HTMLElement {
       { label: 'Battery T1:', entity_suffix: 'temperature_sensor_1', unit: '°C', decimals: 1, column: 1 },
       { label: 'Battery T2:', entity_suffix: 'temperature_sensor_2', unit: '°C', decimals: 1, column: 2 }
     ];
+
+    if (this.content) {
+      this.buildDOM();
+    }
   }
 
   getEntity(suffix, override, type = 'sensor') {
@@ -258,16 +193,13 @@ class JkBmsCard extends HTMLElement {
     this.dispatchEvent(event);
   }
 
-  toggleSwitch(entityId) {
+  toggleSwitch(entityId, requestedState) {
     if (!entityId || !this._hass) return;
-    const isOff = this.getVal(entityId) === 'off';
-    this._hass.callService('switch', isOff ? 'turn_on' : 'turn_off', { entity_id: entityId });
+    const service = requestedState ? 'turn_on' : 'turn_off';
+    this._hass.callService('switch', service, { entity_id: entityId });
   }
 
-  render() {
-    if (!this._hass) return;
-
-    // Set Dynamic CSS Variables
+  buildDOM() {
     this.style.setProperty('--primary-green-color', this._greenColor);
     this.style.setProperty('--time-color', this._timeColor);
     this.style.setProperty('--max-cell-color', this._maxCellColor);
@@ -283,63 +215,47 @@ class JkBmsCard extends HTMLElement {
 
     const bgClass = this._removeBg ? 'transparent-bg' : '';
 
-    // Entity Mappings for Section 1 (Binary Sensors)
     const entTime = this.getEntity('total_runtime_formatted', this._config.entity_total_runtime_formatted, 'sensor');
     const entChargeState = this.getEntity('charging', this._config.entity_charging_state, 'binary_sensor');
     const entDischargeState = this.getEntity('discharging', this._config.entity_discharging_state, 'binary_sensor');
     const entBalancingState = this.getEntity('balancing', this._config.entity_balancing_state, 'binary_sensor');
 
-    // Entity Mappings for Section 2 Header
     const entTotalV = this.getEntity('total_voltage', this._config.entity_total_voltage, 'sensor');
     const entCurrent = this.getEntity('current', this._config.entity_current, 'sensor');
 
-    // Section 3 Max/Min indicators
-    const entMaxCellNum = this.getEntity('max_voltage_cell', this._config.entity_max_voltage_cell, 'sensor');
-    const entMinCellNum = this.getEntity('min_voltage_cell', this._config.entity_min_voltage_cell, 'sensor');
-
-    // Section 4 Switches
     const entSwBalancer = this.getEntity('balancer', this._config.entity_switch_balancer, 'switch');
     const entSwCharge = this.getEntity('charging', this._config.entity_switch_charging, 'switch');
     const entSwDischarge = this.getEntity('discharging', this._config.entity_switch_discharging, 'switch');
 
-    const maxCellNum = parseInt(this.getVal(entMaxCellNum, '0'), 10);
-    const minCellNum = parseInt(this.getVal(entMinCellNum, '0'), 10);
-
     let html = '';
 
-    // --- SECTION 1 ---
+    // SECTION 1
     if (this._showS1) {
       html += `
         <div class="section ${bgClass} s1-container">
           <div class="s1-header">
-            Time: <span class="s1-time clickable-val" data-entity="${entTime}">${this.getVal(entTime)}</span>
+            Time: <span class="s1-time clickable-val" id="s1-time" data-entity="${entTime}">--</span>
           </div>
           <div class="s1-status-row">
-            <div>Charge: <span class="s1-status-val clickable-val" data-entity="${entChargeState}">${this.getFormattedState(entChargeState)}</span></div>
-            <div>Discharge: <span class="s1-status-val clickable-val" data-entity="${entDischargeState}">${this.getFormattedState(entDischargeState)}</span></div>
-            <div>Balance: <span class="s1-status-val clickable-val" data-entity="${entBalancingState}">${this.getFormattedState(entBalancingState)}</span></div>
+            <div>Charge: <span class="s1-status-val clickable-val" id="s1-chg" data-entity="${entChargeState}">--</span></div>
+            <div>Discharge: <span class="s1-status-val clickable-val" id="s1-dis" data-entity="${entDischargeState}">--</span></div>
+            <div>Balance: <span class="s1-status-val clickable-val" id="s1-bal" data-entity="${entBalancingState}">--</span></div>
           </div>
         </div>
       `;
     }
 
-    // --- SECTION 2 ---
+    // SECTION 2
     if (this._showS2) {
       let col1Html = '';
       let col2Html = '';
 
       this._sec2Items.forEach((item, index) => {
         const entId = item.entity || this.getEntity(item.entity_suffix, null, 'sensor');
-        const rawVal = this.getVal(entId);
-        
-        const itemDecimals = item.decimals !== undefined && item.decimals !== '' ? parseInt(item.decimals, 10) : 1;
-        const formattedVal = formatNumber(rawVal, itemDecimals);
-        const unitStr = item.unit ? ` ${item.unit}` : '';
-
         const itemHtml = `
           <div class="s2-item align-${this._sec2Align}">
             <span class="s2-label">${item.label}</span>
-            <span class="s2-val clickable-val" data-entity="${entId}">${formattedVal}${unitStr}</span>
+            <span class="s2-val clickable-val" id="s2-item-${index}" data-entity="${entId}">--</span>
           </div>
         `;
 
@@ -348,14 +264,11 @@ class JkBmsCard extends HTMLElement {
         else col2Html += itemHtml;
       });
 
-      const totalVFormatted = formatNumber(this.getVal(entTotalV), 1);
-      const currentFormatted = formatNumber(this.getVal(entCurrent), 1);
-
       html += `
         <div class="section ${bgClass} s2-container">
           <div class="s2-main-vals">
-            <span class="clickable-val" data-entity="${entTotalV}">${totalVFormatted} V</span>
-            <span class="clickable-val" data-entity="${entCurrent}">${currentFormatted} A</span>
+            <span class="clickable-val" id="s2-total-v" data-entity="${entTotalV}">-- V</span>
+            <span class="clickable-val" id="s2-current" data-entity="${entCurrent}">-- A</span>
           </div>
           <div class="s2-columns">
             <div class="s2-col">${col1Html}</div>
@@ -365,7 +278,7 @@ class JkBmsCard extends HTMLElement {
       `;
     }
 
-    // --- SECTION 3 ---
+    // SECTION 3
     if (this._showS3) {
       const half = Math.ceil(this._cellCount / 2);
       let leftCellsHtml = '';
@@ -376,22 +289,12 @@ class JkBmsCard extends HTMLElement {
         const entCellV = this.getEntity(`cell_voltage_${i}`, this._config[`entity_cell_voltage_${i}`], 'sensor');
         const entCellR = this.getEntity(`cell_resistance_${i}`, this._config[`entity_cell_resistance_${i}`], 'sensor');
 
-        const rawV = this.getVal(entCellV, '0.0');
-        const rawR = this.getVal(entCellR, '0.0');
-
-        const valV = formatNumber(rawV, this._sec3Decimals);
-        const valR = formatNumber(rawR, this._sec3Decimals);
-
-        let colorClass = '';
-        if (i === maxCellNum) colorClass = 'max-v';
-        else if (i === minCellNum) colorClass = 'min-v';
-
         const rowHtml = `
           <div class="cell-row">
             <span class="cell-num">${cellIdStr}.</span>
-            <span class="cell-v ${colorClass} clickable-val" data-entity="${entCellV}">${valV} V</span>
+            <span class="cell-v clickable-val" id="cell-v-${i}" data-entity="${entCellV}">-- V</span>
             <span style="color: #666;">/</span>
-            <span class="cell-r clickable-val" data-entity="${entCellR}">${valR} Ω</span>
+            <span class="cell-r clickable-val" id="cell-r-${i}" data-entity="${entCellR}">-- Ω</span>
           </div>
         `;
 
@@ -410,12 +313,8 @@ class JkBmsCard extends HTMLElement {
       `;
     }
 
-    // --- SECTION 4 ---
+    // SECTION 4
     if (this._showS4) {
-      const balChecked = this.getVal(entSwBalancer) === 'on' ? 'checked' : '';
-      const chgChecked = this.getVal(entSwCharge) === 'on' ? 'checked' : '';
-      const disChecked = this.getVal(entSwDischarge) === 'on' ? 'checked' : '';
-
       html += `
         <div class="section ${bgClass} s4-container">
           <div class="s4-row">
@@ -423,21 +322,21 @@ class JkBmsCard extends HTMLElement {
               <ha-icon icon="mdi:scale-balance"></ha-icon>
               <span>Balancer</span>
             </div>
-            <ha-switch ${balChecked} data-entity="${entSwBalancer}"></ha-switch>
+            <ha-switch id="sw-balancer" data-entity="${entSwBalancer}"></ha-switch>
           </div>
           <div class="s4-row">
             <div class="s4-left">
               <ha-icon icon="mdi:battery-charging"></ha-icon>
               <span>Charging</span>
             </div>
-            <ha-switch ${chgChecked} data-entity="${entSwCharge}"></ha-switch>
+            <ha-switch id="sw-charging" data-entity="${entSwCharge}"></ha-switch>
           </div>
           <div class="s4-row">
             <div class="s4-left">
               <ha-icon icon="mdi:battery-charging"></ha-icon>
               <span>Discharging</span>
             </div>
-            <ha-switch ${disChecked} data-entity="${entSwDischarge}"></ha-switch>
+            <ha-switch id="sw-discharging" data-entity="${entSwDischarge}"></ha-switch>
           </div>
         </div>
       `;
@@ -445,7 +344,7 @@ class JkBmsCard extends HTMLElement {
 
     this.content.innerHTML = html;
 
-    // Attach click events exclusively to value spans
+    // Attach Click Events once
     this.content.querySelectorAll('.clickable-val').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -454,15 +353,103 @@ class JkBmsCard extends HTMLElement {
       });
     });
 
-    // Attach switch toggle events
+    // Attach Switch Event Handlers once
     this.content.querySelectorAll('ha-switch').forEach(sw => {
-      sw.addEventListener('click', (e) => {
+      sw.addEventListener('change', (e) => {
         e.stopPropagation();
-        e.preventDefault();
         const entity = sw.getAttribute('data-entity');
-        if (entity) this.toggleSwitch(entity);
+        if (entity) this.toggleSwitch(entity, sw.checked);
       });
     });
+
+    this.updateValues();
+  }
+
+  updateValues() {
+    if (!this._hass) return;
+
+    // SECTION 1 Updates
+    if (this._showS1) {
+      const entTime = this.getEntity('total_runtime_formatted', this._config.entity_total_runtime_formatted, 'sensor');
+      const entChargeState = this.getEntity('charging', this._config.entity_charging_state, 'binary_sensor');
+      const entDischargeState = this.getEntity('discharging', this._config.entity_discharging_state, 'binary_sensor');
+      const entBalancingState = this.getEntity('balancing', this._config.entity_balancing_state, 'binary_sensor');
+
+      const elTime = this.querySelector('#s1-time');
+      const elChg = this.querySelector('#s1-chg');
+      const elDis = this.querySelector('#s1-dis');
+      const elBal = this.querySelector('#s1-bal');
+
+      if (elTime) elTime.textContent = this.getVal(entTime);
+      if (elChg) elChg.textContent = this.getFormattedState(entChargeState);
+      if (elDis) elDis.textContent = this.getFormattedState(entDischargeState);
+      if (elBal) elBal.textContent = this.getFormattedState(entBalancingState);
+    }
+
+    // SECTION 2 Updates
+    if (this._showS2) {
+      const entTotalV = this.getEntity('total_voltage', this._config.entity_total_voltage, 'sensor');
+      const entCurrent = this.getEntity('current', this._config.entity_current, 'sensor');
+
+      const elTotalV = this.querySelector('#s2-total-v');
+      const elCurrent = this.querySelector('#s2-current');
+
+      if (elTotalV) elTotalV.textContent = `${formatNumber(this.getVal(entTotalV), 1)} V`;
+      if (elCurrent) elCurrent.textContent = `${formatNumber(this.getVal(entCurrent), 1)} A`;
+
+      this._sec2Items.forEach((item, index) => {
+        const entId = item.entity || this.getEntity(item.entity_suffix, null, 'sensor');
+        const elItem = this.querySelector(`#s2-item-${index}`);
+        if (elItem) {
+          const itemDecimals = item.decimals !== undefined && item.decimals !== '' ? parseInt(item.decimals, 10) : 1;
+          const formattedVal = formatNumber(this.getVal(entId), itemDecimals);
+          const unitStr = item.unit ? ` ${item.unit}` : '';
+          elItem.textContent = `${formattedVal}${unitStr}`;
+        }
+      });
+    }
+
+    // SECTION 3 Updates
+    if (this._showS3) {
+      const entMaxCellNum = this.getEntity('max_voltage_cell', this._config.entity_max_voltage_cell, 'sensor');
+      const entMinCellNum = this.getEntity('min_voltage_cell', this._config.entity_min_voltage_cell, 'sensor');
+      const maxCellNum = parseInt(this.getVal(entMaxCellNum, '0'), 10);
+      const minCellNum = parseInt(this.getVal(entMinCellNum, '0'), 10);
+
+      for (let i = 1; i <= this._cellCount; i++) {
+        const entCellV = this.getEntity(`cell_voltage_${i}`, this._config[`entity_cell_voltage_${i}`], 'sensor');
+        const entCellR = this.getEntity(`cell_resistance_${i}`, this._config[`entity_cell_resistance_${i}`], 'sensor');
+
+        const elV = this.querySelector(`#cell-v-${i}`);
+        const elR = this.querySelector(`#cell-r-${i}`);
+
+        if (elV) {
+          elV.textContent = `${formatNumber(this.getVal(entCellV, '0.0'), this._sec3Decimals)} V`;
+          elV.classList.remove('max-v', 'min-v');
+          if (i === maxCellNum) elV.classList.add('max-v');
+          else if (i === minCellNum) elV.classList.add('min-v');
+        }
+
+        if (elR) {
+          elR.textContent = `${formatNumber(this.getVal(entCellR, '0.0'), this._sec3Decimals)} Ω`;
+        }
+      }
+    }
+
+    // SECTION 4 Updates
+    if (this._showS4) {
+      const entSwBalancer = this.getEntity('balancer', this._config.entity_switch_balancer, 'switch');
+      const entSwCharge = this.getEntity('charging', this._config.entity_switch_charging, 'switch');
+      const entSwDischarge = this.getEntity('discharging', this._config.entity_switch_discharging, 'switch');
+
+      const swBal = this.querySelector('#sw-balancer');
+      const swChg = this.querySelector('#sw-charging');
+      const swDis = this.querySelector('#sw-discharging');
+
+      if (swBal) swBal.checked = this.getVal(entSwBalancer) === 'on';
+      if (swChg) swChg.checked = this.getVal(entSwCharge) === 'on';
+      if (swDis) swDis.checked = this.getVal(entSwDischarge) === 'on';
+    }
   }
 
   getCardSize() {
@@ -470,7 +457,7 @@ class JkBmsCard extends HTMLElement {
   }
 }
 
-// --- VISUAL UI CARD EDITOR ---
+// Visual Card Editor
 class JkBmsCardEditor extends HTMLElement {
   setConfig(config) {
     this._config = Object.assign({}, config);
@@ -654,19 +641,16 @@ class JkBmsCardEditor extends HTMLElement {
       </div>
     `;
 
-    // Bind global inputs
     this.querySelectorAll('input[type="text"], input[type="number"], input[type="color"], select#sec2_align').forEach(el => {
       if (!el.getAttribute('data-field')) {
         el.addEventListener('change', this._valueChanged.bind(this));
       }
     });
 
-    // Instant click updates for checkboxes
     this.querySelectorAll('input[type="checkbox"]').forEach(el => {
       el.addEventListener('click', this._checkboxChanged.bind(this));
     });
 
-    // Bind Section 2 dynamic items updates
     this.querySelectorAll('#sec2-items-container input, #sec2-items-container select, #sec2-items-container ha-entity-picker').forEach(el => {
       el.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-idx');
@@ -679,7 +663,6 @@ class JkBmsCardEditor extends HTMLElement {
       });
     });
 
-    // Delete item listener
     this.querySelectorAll('.btn-del').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const idx = parseInt(e.target.getAttribute('data-idx'), 10);
@@ -689,7 +672,6 @@ class JkBmsCardEditor extends HTMLElement {
       });
     });
 
-    // Add item listener
     const btnAdd = this.querySelector('#btn-add-item');
     if (btnAdd) {
       btnAdd.addEventListener('click', () => {
@@ -726,7 +708,6 @@ class JkBmsCardEditor extends HTMLElement {
 customElements.define('jk-bms-card', JkBmsCard);
 customElements.define('jk-bms-card-editor', JkBmsCardEditor);
 
-// HACS Custom Card Registration
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "jk-bms-card",
