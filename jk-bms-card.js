@@ -1,6 +1,6 @@
 /**
- * JK-BMS Custom Lovelace Card (v1.1.0)
- * Replicates JK-BMS App UI with HA Native Components, Dynamic Scaling & Precise Click Routing
+ * JK-BMS Custom Lovelace Card (v1.2.1)
+ * Replicates JK-BMS App UI with Fixed UI Editor Controls & Corrected Section 2 Color Mapping
  */
 
 // --- HELPER FUNCTION FOR DECIMAL FORMATTING ---
@@ -216,7 +216,7 @@ class JkBmsCard extends HTMLElement {
     // Alignment
     this._sec2Align = this._config.sec2_align || 'center';
 
-    // Section Visibility
+    // Section Visibility (Defaulting to true)
     this._showS1 = this._config.show_section_1 !== false;
     this._showS2 = this._config.show_section_2 !== false;
     this._showS3 = this._config.show_section_3 !== false;
@@ -225,7 +225,7 @@ class JkBmsCard extends HTMLElement {
     
     this._cellCount = parseInt(this._config.cell_count || 16, 10);
 
-    // Default Section 2 Items mapped to accurate sensor suffixes
+    // Default Section 2 Items
     this._sec2Items = this._config.sec2_items || [
       { label: 'Battery Power:', entity_suffix: 'power', unit: 'W', column: 1 },
       { label: 'Remain Battery:', entity_suffix: 'state_of_charge', unit: '%', column: 2 },
@@ -284,7 +284,8 @@ class JkBmsCard extends HTMLElement {
     this.style.setProperty('--s3-scale', this._s3Scale);
     this.style.setProperty('--s4-scale', this._s4Scale);
 
-    const valColorSec2 = this._usePrimaryColorSec2 ? 'var(--primary-color, #03a9f4)' : this._sec2ValColor;
+    // Corrected Section 2 Value Color: Maps to Primary Status Color when enabled
+    const valColorSec2 = this._usePrimaryColorSec2 ? 'var(--primary-green-color)' : this._sec2ValColor;
     this.style.setProperty('--sec2-val-final-color', valColorSec2);
 
     const bgClass = this._removeBg ? 'transparent-bg' : '';
@@ -486,7 +487,7 @@ class JkBmsCard extends HTMLElement {
   }
 }
 
-// --- VISUAL UI CARD EDITOR (USING HA NATIVE COMPONENTS) ---
+// --- VISUAL UI CARD EDITOR ---
 class JkBmsCardEditor extends HTMLElement {
   setConfig(config) {
     this._config = Object.assign({}, config);
@@ -530,12 +531,16 @@ class JkBmsCardEditor extends HTMLElement {
       itemsHtml += `
         <div style="border: 1px solid var(--divider-color, #444); border-radius: 6px; padding: 10px; margin-bottom: 10px; background: var(--card-background-color, #222);">
           <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
-            <ha-textfield label="Label" .value="${item.label || ''}" data-idx="${idx}" data-field="label" style="flex: 2;"></ha-textfield>
-            <ha-textfield label="Suffix" .value="${item.entity_suffix || ''}" data-idx="${idx}" data-field="entity_suffix" style="flex: 2;"></ha-textfield>
-            <ha-textfield label="Unit" .value="${item.unit || ''}" data-idx="${idx}" data-field="unit" style="flex: 1;"></ha-textfield>
-            <button class="btn-del" data-idx="${idx}" style="background:#f44336; color:#fff; border:none; border-radius:4px; padding:8px 12px; cursor:pointer;">X</button>
+            <input type="text" placeholder="Label" value="${item.label || ''}" data-idx="${idx}" data-field="label" style="flex: 2; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
+            <input type="text" placeholder="Suffix" value="${item.entity_suffix || ''}" data-idx="${idx}" data-field="entity_suffix" style="flex: 2; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
+            <input type="text" placeholder="Unit" value="${item.unit || ''}" data-idx="${idx}" data-field="unit" style="flex: 1; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
+            <select data-idx="${idx}" data-field="column" style="flex: 1; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
+              <option value="1" ${item.column == 1 ? 'selected' : ''}>Col 1</option>
+              <option value="2" ${item.column == 2 ? 'selected' : ''}>Col 2</option>
+            </select>
+            <button class="btn-del" data-idx="${idx}" style="background:#f44336; color:#fff; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">X</button>
           </div>
-          <div style="margin-top: 6px;">
+          <div>
             <ha-entity-picker 
               label="Override Entity (Optional)" 
               .hass=${this._hass} 
@@ -553,84 +558,105 @@ class JkBmsCardEditor extends HTMLElement {
 
     this.innerHTML = `
       <style>
-        .editor-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 10px; }
-        .editor-row label { font-weight: 500; font-size: 14px; }
-        .sec-title { font-size: 15px; font-weight: bold; margin: 18px 0 10px 0; border-bottom: 1px solid var(--divider-color, #444); padding-bottom: 4px; }
-        ha-textfield, ha-select, ha-entity-picker { width: 100%; }
+        .editor-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 10px; }
+        .editor-row label { font-weight: 500; font-size: 13px; color: var(--primary-text-color, #fff); }
+        .editor-row input[type="text"], .editor-row input[type="number"], .editor-row select {
+          padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;
+        }
+        .editor-row-half { display: flex; gap: 10px; margin-bottom: 10px; }
+        .editor-col { flex: 1; }
+        .sec-title { font-size: 14px; font-weight: bold; margin: 16px 0 8px 0; border-bottom: 1px solid var(--divider-color, #444); padding-bottom: 4px; color: var(--primary-text-color, #fff); }
+        .chk-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; }
+        .chk-row label { cursor: pointer; font-size: 13px; }
       </style>
       <div>
         <div class="sec-title">General Settings</div>
-        <div class="editor-row">
-          <ha-textfield id="prefix" label="Device Prefix" .value="${this._config.prefix || 'jk-bms'}"></ha-textfield>
-        </div>
-        <div class="editor-row">
-          <ha-textfield id="cell_count" type="number" label="Cell Count" .value="${this._config.cell_count || 16}"></ha-textfield>
+        <div class="editor-row-half">
+          <div class="editor-col">
+            <label>Device Prefix:</label>
+            <input type="text" id="prefix" value="${this._config.prefix || 'jk-bms'}">
+          </div>
+          <div class="editor-col">
+            <label>Cell Count:</label>
+            <input type="number" id="cell_count" value="${this._config.cell_count || 16}">
+          </div>
         </div>
 
         <div class="sec-title">Formatting & Decimals</div>
-        <div class="editor-row">
-          <ha-textfield id="sec2_decimals" type="number" label="Section 2 Decimals" .value="${this._config.sec2_decimals !== undefined ? this._config.sec2_decimals : 1}"></ha-textfield>
-          <ha-textfield id="sec3_decimals" type="number" label="Section 3 Cell Decimals" .value="${this._config.sec3_decimals !== undefined ? this._config.sec3_decimals : 1}"></ha-textfield>
+        <div class="editor-row-half">
+          <div class="editor-col">
+            <label>Section 2 Decimals:</label>
+            <input type="number" id="sec2_decimals" value="${this._config.sec2_decimals !== undefined ? this._config.sec2_decimals : 1}">
+          </div>
+          <div class="editor-col">
+            <label>Section 3 Cell Decimals:</label>
+            <input type="number" id="sec3_decimals" value="${this._config.sec3_decimals !== undefined ? this._config.sec3_decimals : 1}">
+          </div>
         </div>
 
         <div class="sec-title">Section Scaling (Font Size)</div>
-        <div class="editor-row">
-          <ha-textfield id="s1_scale" type="number" step="0.1" label="Section 1 Scale" .value="${this._config.s1_scale || 1.0}"></ha-textfield>
-          <ha-textfield id="s2_scale" type="number" step="0.1" label="Section 2 Scale" .value="${this._config.s2_scale || 1.0}"></ha-textfield>
+        <div class="editor-row-half">
+          <div class="editor-col">
+            <label>Section 1 Scale:</label>
+            <input type="number" step="0.1" id="s1_scale" value="${this._config.s1_scale || 1.0}">
+          </div>
+          <div class="editor-col">
+            <label>Section 2 Scale:</label>
+            <input type="number" step="0.1" id="s2_scale" value="${this._config.s2_scale || 1.0}">
+          </div>
         </div>
-        <div class="editor-row">
-          <ha-textfield id="s3_scale" type="number" step="0.1" label="Section 3 Scale" .value="${this._config.s3_scale || 1.0}"></ha-textfield>
-          <ha-textfield id="s4_scale" type="number" step="0.1" label="Section 4 Scale" .value="${this._config.s4_scale || 1.0}"></ha-textfield>
+        <div class="editor-row-half">
+          <div class="editor-col">
+            <label>Section 3 Scale:</label>
+            <input type="number" step="0.1" id="s3_scale" value="${this._config.s3_scale || 1.0}">
+          </div>
+          <div class="editor-col">
+            <label>Section 4 Scale:</label>
+            <input type="number" step="0.1" id="s4_scale" value="${this._config.s4_scale || 1.0}">
+          </div>
         </div>
 
         <div class="sec-title">Section Visibility</div>
-        <div class="editor-row">
-          <ha-formfield label="Show Section 1 (Header Status)">
-            <ha-checkbox id="show_section_1" .checked=${this._config.show_section_1 !== false}></ha-checkbox>
-          </ha-formfield>
+        <div class="chk-row">
+          <input type="checkbox" id="show_section_1" ${this._config.show_section_1 !== false ? 'checked' : ''}>
+          <label for="show_section_1">Show Section 1 (Header Status)</label>
         </div>
-        <div class="editor-row">
-          <ha-formfield label="Show Section 2 (Grid Data)">
-            <ha-checkbox id="show_section_2" .checked=${this._config.show_section_2 !== false}></ha-checkbox>
-          </ha-formfield>
+        <div class="chk-row">
+          <input type="checkbox" id="show_section_2" ${this._config.show_section_2 !== false ? 'checked' : ''}>
+          <label for="show_section_2">Show Section 2 (Grid Data)</label>
         </div>
-        <div class="editor-row">
-          <ha-formfield label="Show Section 3 (Cell Voltages)">
-            <ha-checkbox id="show_section_3" .checked=${this._config.show_section_3 !== false}></ha-checkbox>
-          </ha-formfield>
+        <div class="chk-row">
+          <input type="checkbox" id="show_section_3" ${this._config.show_section_3 !== false ? 'checked' : ''}>
+          <label for="show_section_3">Show Section 3 (Cell Voltages)</label>
         </div>
-        <div class="editor-row">
-          <ha-formfield label="Show Section 4 (Switches)">
-            <ha-checkbox id="show_section_4" .checked=${this._config.show_section_4 !== false}></ha-checkbox>
-          </ha-formfield>
+        <div class="chk-row">
+          <input type="checkbox" id="show_section_4" ${this._config.show_section_4 !== false ? 'checked' : ''}>
+          <label for="show_section_4">Show Section 4 (Switches)</label>
         </div>
-        <div class="editor-row">
-          <ha-formfield label="Show 'Cells' Title in Section 3">
-            <ha-checkbox id="show_cells_title" .checked=${this._config.show_cells_title !== false}></ha-checkbox>
-          </ha-formfield>
+        <div class="chk-row">
+          <input type="checkbox" id="show_cells_title" ${this._config.show_cells_title !== false ? 'checked' : ''}>
+          <label for="show_cells_title">Show 'Cells' Title in Section 3</label>
         </div>
 
-        <div class="sec-title">Section 2 Alignment & Styling</div>
+        <div class="sec-title">Section 2 Layout & Text Alignment</div>
         <div class="editor-row">
           <label>Sec 2 Text Alignment:</label>
-          <select id="sec2_align" style="padding: 8px; background: #111; color: #fff; border-radius: 4px; border: 1px solid #555;">
+          <select id="sec2_align">
             <option value="center" ${alignVal === 'center' ? 'selected' : ''}>Centered (Default)</option>
             <option value="space-between" ${alignVal === 'space-between' ? 'selected' : ''}>Spread (Left & Right Ends)</option>
             <option value="flex-start" ${alignVal === 'flex-start' ? 'selected' : ''}>Align Left</option>
             <option value="flex-end" ${alignVal === 'flex-end' ? 'selected' : ''}>Align Right</option>
           </select>
         </div>
-        <div class="editor-row">
-          <ha-formfield label="Use HA Theme Primary Color for Section 2 Values">
-            <ha-checkbox id="use_primary_color_sec2" .checked=${this._config.use_primary_color_sec2 === true}></ha-checkbox>
-          </ha-formfield>
+        <div class="chk-row">
+          <input type="checkbox" id="use_primary_color_sec2" ${this._config.use_primary_color_sec2 === true ? 'checked' : ''}>
+          <label for="use_primary_color_sec2">Use Primary Status Color for Section 2 Values</label>
         </div>
 
         <div class="sec-title">Background Customization</div>
-        <div class="editor-row">
-          <ha-formfield label="Remove Section Backgrounds (Transparent)">
-            <ha-checkbox id="remove_section_bg" .checked=${this._config.remove_section_bg === true}></ha-checkbox>
-          </ha-formfield>
+        <div class="chk-row">
+          <input type="checkbox" id="remove_section_bg" ${this._config.remove_section_bg === true ? 'checked' : ''}>
+          <label for="remove_section_bg">Remove Section Backgrounds (Transparent)</label>
         </div>
         <div class="editor-row">
           <label>Section Background Color:</label>
@@ -638,11 +664,11 @@ class JkBmsCardEditor extends HTMLElement {
         </div>
 
         <div class="sec-title">Color Customization</div>
-        <div class="editor-row"><label>Primary Status Green:</label><input type="color" id="primary_green_color" value="${this._config.primary_green_color || '#2e7d32'}"></div>
-        <div class="editor-row"><label>Uptime Blue Color:</label><input type="color" id="time_color" value="${this._config.time_color || '#2196f3'}"></div>
-        <div class="editor-row"><label>Highest Cell Color (Blue):</label><input type="color" id="max_cell_color" value="${this._config.max_cell_color || '#2196f3'}"></div>
-        <div class="editor-row"><label>Lowest Cell Color (Red):</label><input type="color" id="min_cell_color" value="${this._config.min_cell_color || '#f44336'}"></div>
-        <div class="editor-row"><label>Section 2 Custom Value Color:</label><input type="color" id="sec2_value_color" value="${this._config.sec2_value_color || '#ffffff'}"></div>
+        <div class="editor-row"><label>Primary Status Color:</label><input type="color" id="primary_green_color" value="${this._config.primary_green_color || '#2e7d32'}"></div>
+        <div class="editor-row"><label>Uptime Header Color:</label><input type="color" id="time_color" value="${this._config.time_color || '#2196f3'}"></div>
+        <div class="editor-row"><label>Highest Cell Color:</label><input type="color" id="max_cell_color" value="${this._config.max_cell_color || '#2196f3'}"></div>
+        <div class="editor-row"><label>Lowest Cell Color:</label><input type="color" id="min_cell_color" value="${this._config.min_cell_color || '#f44336'}"></div>
+        <div class="editor-row"><label>Section 2 Values Custom Color:</label><input type="color" id="sec2_value_color" value="${this._config.sec2_value_color || '#ffffff'}"></div>
 
         <div class="sec-title">Section 2 Items & Dynamic Configuration</div>
         <div id="sec2-items-container">${itemsHtml}</div>
@@ -650,17 +676,18 @@ class JkBmsCardEditor extends HTMLElement {
       </div>
     `;
 
-    // Bind Native UI input listeners
-    this.querySelectorAll('ha-textfield, select#sec2_align, input[type="color"]').forEach(el => {
+    // Bind inputs
+    this.querySelectorAll('input[type="text"], input[type="number"], input[type="color"], select#sec2_align').forEach(el => {
       el.addEventListener('change', this._valueChanged.bind(this));
     });
 
-    this.querySelectorAll('ha-checkbox').forEach(el => {
-      el.addEventListener('change', this._checkboxChanged.bind(this));
+    // Instant click updates for checkboxes
+    this.querySelectorAll('input[type="checkbox"]').forEach(el => {
+      el.addEventListener('click', this._checkboxChanged.bind(this));
     });
 
-    // Dynamic Section 2 item listeners
-    this.querySelectorAll('#sec2-items-container ha-textfield, #sec2-items-container ha-entity-picker').forEach(el => {
+    // Bind Section 2 dynamic updates
+    this.querySelectorAll('#sec2-items-container input, #sec2-items-container select, #sec2-items-container ha-entity-picker').forEach(el => {
       el.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-idx');
         const field = e.target.getAttribute('data-field');
