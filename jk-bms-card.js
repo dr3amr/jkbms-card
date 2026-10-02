@@ -1,6 +1,6 @@
 /**
- * JK-BMS Custom Lovelace Card (v1.6.0)
- * Fixed infinite re-render loop, hover intermittency, and switch control handlers.
+ * JK-BMS Custom Lovelace Card (v1.6.1)
+ * Fixed infinite re-render loop and reduced Section 2 row spacing to match Section 3.
  */
 
 function formatNumber(val, decimals = 1) {
@@ -44,7 +44,7 @@ class JkBmsCard extends HTMLElement {
           .s1-status-row { display: flex; justify-content: space-around; }
           .s1-status-val { color: var(--primary-green-color, #2e7d32); font-weight: bold; }
 
-          /* Section 2 */
+          /* Section 2 (Tighter spacing applied here) */
           .s2-container { font-size: calc(14.4px * var(--s2-scale, 1)); }
           .s2-main-vals {
             display: flex;
@@ -52,15 +52,15 @@ class JkBmsCard extends HTMLElement {
             font-size: calc(28.8px * var(--s2-scale, 1));
             font-weight: bold;
             color: var(--primary-green-color, #2e7d32);
-            margin-bottom: 8px;
+            margin-bottom: 4px;
           }
           .s2-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
-          .s2-col { display: flex; flex-direction: column; gap: 6px; }
-          .s2-item { display: flex; gap: 6px; }
-          .s2-item.align-center { justify-content: center; }
+          .s2-col { display: flex; flex-direction: column; gap: 4px; }
+          .s2-item { display: flex; }
+          .s2-item.align-center { justify-content: center; gap: 6px; }
           .s2-item.align-space-between { justify-content: space-between; }
-          .s2-item.align-flex-start { justify-content: flex-start; }
-          .s2-item.align-flex-end { justify-content: flex-end; }
+          .s2-item.align-flex-start { justify-content: flex-start; gap: 6px; }
+          .s2-item.align-flex-end { justify-content: flex-end; gap: 6px; }
           .s2-label { color: var(--primary-text-color, #ffffff); }
           .s2-val { color: var(--sec2-val-final-color, #ffffff); font-weight: 500; }
 
