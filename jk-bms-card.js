@@ -1,6 +1,6 @@
 /**
- * JK-BMS Custom Lovelace Card (v1.6.1)
- * Fixed infinite re-render loop and reduced Section 2 row spacing to match Section 3.
+ * JK-BMS Custom Lovelace Card (v1.6.2)
+ * Centered text alignment for cell rows in Section 3.
  */
 
 function formatNumber(val, decimals = 1) {
@@ -44,7 +44,7 @@ class JkBmsCard extends HTMLElement {
           .s1-status-row { display: flex; justify-content: space-around; }
           .s1-status-val { color: var(--primary-green-color, #2e7d32); font-weight: bold; }
 
-          /* Section 2 (Tighter spacing applied here) */
+          /* Section 2 */
           .s2-container { font-size: calc(14.4px * var(--s2-scale, 1)); }
           .s2-main-vals {
             display: flex;
@@ -64,11 +64,11 @@ class JkBmsCard extends HTMLElement {
           .s2-label { color: var(--primary-text-color, #ffffff); }
           .s2-val { color: var(--sec2-val-final-color, #ffffff); font-weight: 500; }
 
-          /* Section 3 */
+          /* Section 3 (Centered column text applied here) */
           .s3-container { font-size: calc(14.4px * var(--s3-scale, 1)); }
           .s3-title { text-align: center; font-weight: bold; font-size: calc(16.8px * var(--s3-scale, 1)); margin-bottom: 8px; }
           .cells-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; row-gap: 4px; font-family: monospace; }
-          .cell-row { display: flex; justify-content: space-between; }
+          .cell-row { display: flex; justify-content: center; gap: 6px; }
           .cell-num { color: var(--primary-text-color, #ffffff); }
           .cell-v { color: var(--primary-text-color, #ffffff); }
           .cell-v.max-v { color: var(--max-cell-color, #2196f3) !important; font-weight: bold; }
