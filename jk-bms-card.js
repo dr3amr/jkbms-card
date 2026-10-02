@@ -1,6 +1,6 @@
 /**
- * JK-BMS Custom Lovelace Card (v1.3.0)
- * Replicates JK-BMS App UI with Per-Item Decimal Configuration in Section 2
+ * JK-BMS Custom Lovelace Card (v1.5.0)
+ * Replicates JK-BMS App UI with 1.2x Scaled Base Typography & Native HA Switch Controls
  */
 
 // --- HELPER FUNCTION FOR DECIMAL FORMATTING ---
@@ -39,9 +39,9 @@ class JkBmsCard extends HTMLElement {
             margin-bottom: 0;
           }
 
-          /* Section 1 */
+          /* Section 1 - Base 15.6px (13px * 1.2) */
           .s1-container {
-            font-size: calc(13px * var(--s1-scale, 1));
+            font-size: calc(15.6px * var(--s1-scale, 1));
           }
           .s1-header {
             text-align: center;
@@ -61,14 +61,14 @@ class JkBmsCard extends HTMLElement {
             font-weight: bold;
           }
 
-          /* Section 2 */
+          /* Section 2 - Base 14.4px (12px * 1.2) / Header Base 28.8px (24px * 1.2) */
           .s2-container {
-            font-size: calc(12px * var(--s2-scale, 1));
+            font-size: calc(14.4px * var(--s2-scale, 1));
           }
           .s2-main-vals {
             display: flex;
             justify-content: space-around;
-            font-size: calc(24px * var(--s2-scale, 1));
+            font-size: calc(28.8px * var(--s2-scale, 1));
             font-weight: bold;
             color: var(--primary-green-color, #2e7d32);
             margin-bottom: 8px;
@@ -97,14 +97,14 @@ class JkBmsCard extends HTMLElement {
             font-weight: 500;
           }
 
-          /* Section 3 */
+          /* Section 3 - Base 14.4px (12px * 1.2) */
           .s3-container {
-            font-size: calc(12px * var(--s3-scale, 1));
+            font-size: calc(14.4px * var(--s3-scale, 1));
           }
           .s3-title {
             text-align: center;
             font-weight: bold;
-            font-size: calc(14px * var(--s3-scale, 1));
+            font-size: calc(16.8px * var(--s3-scale, 1));
             margin-bottom: 8px;
           }
           .cells-grid {
@@ -124,9 +124,9 @@ class JkBmsCard extends HTMLElement {
           .cell-v.min-v { color: var(--min-cell-color, #f44336) !important; font-weight: bold; }
           .cell-r { color: var(--primary-text-color, #ffffff); }
 
-          /* Section 4 */
+          /* Section 4 - Base 15.6px (13px * 1.2) */
           .s4-container {
-            font-size: calc(13px * var(--s4-scale, 1));
+            font-size: calc(15.6px * var(--s4-scale, 1));
           }
           .s4-row {
             display: flex;
@@ -214,7 +214,7 @@ class JkBmsCard extends HTMLElement {
     // Alignment
     this._sec2Align = this._config.sec2_align || 'center';
 
-    // Section Visibility (Defaulting to true)
+    // Section Visibility
     this._showS1 = this._config.show_section_1 !== false;
     this._showS2 = this._config.show_section_2 !== false;
     this._showS3 = this._config.show_section_3 !== false;
@@ -223,7 +223,7 @@ class JkBmsCard extends HTMLElement {
     
     this._cellCount = parseInt(this._config.cell_count || 16, 10);
 
-    // Default Section 2 Items (With per-item decimals support)
+    // Default Section 2 Items
     this._sec2Items = this._config.sec2_items || [
       { label: 'Battery Power:', entity_suffix: 'power', unit: 'W', decimals: 1, column: 1 },
       { label: 'Remain Battery:', entity_suffix: 'state_of_charge', unit: '%', decimals: 1, column: 2 },
@@ -240,14 +240,9 @@ class JkBmsCard extends HTMLElement {
     ];
   }
 
-  getEntity(suffix, override) {
+  getEntity(suffix, override, type = 'sensor') {
     if (override) return override;
-    return `sensor.${this._prefix}_${suffix}`;
-  }
-
-  getSwitchEntity(suffix, override) {
-    if (override) return override;
-    return `switch.${this._prefix}_${suffix}`;
+    return `${type}.${this._prefix}_${suffix}`;
   }
 
   getVal(entityId, defaultVal = '--') {
@@ -260,12 +255,6 @@ class JkBmsCard extends HTMLElement {
     const event = new Event('hass-more-info', { bubbles: true, composed: true });
     event.detail = { entityId };
     this.dispatchEvent(event);
-  }
-
-  toggleSwitch(entityId, currentStatus) {
-    if (!entityId || !this._hass || !this._hass.states[entityId]) return;
-    const service = currentStatus === 'on' ? 'turn_off' : 'turn_on';
-    this._hass.callService('switch', service, { entity_id: entityId });
   }
 
   render() {
@@ -287,24 +276,24 @@ class JkBmsCard extends HTMLElement {
 
     const bgClass = this._removeBg ? 'transparent-bg' : '';
 
-    // Entity mapping for Section 1
-    const entTime = this.getEntity('total_runtime_formatted', this._config.entity_total_runtime_formatted);
-    const entChargeState = this.getEntity('charging', this._config.entity_charging_state);
-    const entDischargeState = this.getEntity('discharging', this._config.entity_discharging_state);
-    const entBalancingState = this.getEntity('balancing', this._config.entity_balancing_state);
+    // Entity Mappings for Section 1
+    const entTime = this.getEntity('total_runtime_formatted', this._config.entity_total_runtime_formatted, 'sensor');
+    const entChargeState = this.getEntity('charging', this._config.entity_charging_state, 'sensor');
+    const entDischargeState = this.getEntity('discharging', this._config.entity_discharging_state, 'sensor');
+    const entBalancingState = this.getEntity('balancing', this._config.entity_balancing_state, 'sensor');
 
-    // Entity mapping for Section 2 Header
-    const entTotalV = this.getEntity('total_voltage', this._config.entity_total_voltage);
-    const entCurrent = this.getEntity('current', this._config.entity_current);
+    // Entity Mappings for Section 2 Header
+    const entTotalV = this.getEntity('total_voltage', this._config.entity_total_voltage, 'sensor');
+    const entCurrent = this.getEntity('current', this._config.entity_current, 'sensor');
 
     // Section 3 Max/Min indicators
-    const entMaxCellNum = this.getEntity('max_voltage_cell', this._config.entity_max_voltage_cell);
-    const entMinCellNum = this.getEntity('min_voltage_cell', this._config.entity_min_voltage_cell);
+    const entMaxCellNum = this.getEntity('max_voltage_cell', this._config.entity_max_voltage_cell, 'sensor');
+    const entMinCellNum = this.getEntity('min_voltage_cell', this._config.entity_min_voltage_cell, 'sensor');
 
     // Section 4 Switches
-    const entSwBalancer = this.getSwitchEntity('balancer', this._config.entity_switch_balancer);
-    const entSwCharge = this.getSwitchEntity('charging', this._config.entity_switch_charging);
-    const entSwDischarge = this.getSwitchEntity('discharging', this._config.entity_switch_discharging);
+    const entSwBalancer = this.getEntity('balancer', this._config.entity_switch_balancer, 'switch');
+    const entSwCharge = this.getEntity('charging', this._config.entity_switch_charging, 'switch');
+    const entSwDischarge = this.getEntity('discharging', this._config.entity_switch_discharging, 'switch');
 
     const maxCellNum = parseInt(this.getVal(entMaxCellNum, '0'), 10);
     const minCellNum = parseInt(this.getVal(entMinCellNum, '0'), 10);
@@ -333,10 +322,9 @@ class JkBmsCard extends HTMLElement {
       let col2Html = '';
 
       this._sec2Items.forEach((item, index) => {
-        const entId = item.entity || this.getEntity(item.entity_suffix);
+        const entId = item.entity || this.getEntity(item.entity_suffix, null, 'sensor');
         const rawVal = this.getVal(entId);
         
-        // Per-item decimal formatting
         const itemDecimals = item.decimals !== undefined && item.decimals !== '' ? parseInt(item.decimals, 10) : 1;
         const formattedVal = formatNumber(rawVal, itemDecimals);
         const unitStr = item.unit ? ` ${item.unit}` : '';
@@ -378,8 +366,8 @@ class JkBmsCard extends HTMLElement {
 
       for (let i = 1; i <= this._cellCount; i++) {
         const cellIdStr = i.toString().padStart(2, '0');
-        const entCellV = this.getEntity(`cell_voltage_${i}`, this._config[`entity_cell_voltage_${i}`]);
-        const entCellR = this.getEntity(`cell_resistance_${i}`, this._config[`entity_cell_resistance_${i}`]);
+        const entCellV = this.getEntity(`cell_voltage_${i}`, this._config[`entity_cell_voltage_${i}`], 'sensor');
+        const entCellR = this.getEntity(`cell_resistance_${i}`, this._config[`entity_cell_resistance_${i}`], 'sensor');
 
         const rawV = this.getVal(entCellV, '0.0');
         const rawR = this.getVal(entCellR, '0.0');
@@ -417,10 +405,6 @@ class JkBmsCard extends HTMLElement {
 
     // --- SECTION 4 ---
     if (this._showS4) {
-      const balState = this._hass.states[entSwBalancer];
-      const chgState = this._hass.states[entSwCharge];
-      const disState = this._hass.states[entSwDischarge];
-
       html += `
         <div class="section ${bgClass} s4-container">
           <div class="s4-row">
@@ -428,33 +412,21 @@ class JkBmsCard extends HTMLElement {
               <ha-icon icon="mdi:scale-balance"></ha-icon>
               <span>Balancer</span>
             </div>
-            <ha-switch 
-              .checked=${balState ? balState.state === 'on' : false} 
-              data-switch-entity="${entSwBalancer}"
-              data-status="${balState ? balState.state : 'off'}">
-            </ha-switch>
+            <ha-entity-toggle .hass=${this._hass} .stateObj=${this._hass.states[entSwBalancer]}></ha-entity-toggle>
           </div>
           <div class="s4-row">
             <div class="s4-left">
               <ha-icon icon="mdi:battery-charging"></ha-icon>
               <span>Charging</span>
             </div>
-            <ha-switch 
-              .checked=${chgState ? chgState.state === 'on' : false} 
-              data-switch-entity="${entSwCharge}"
-              data-status="${chgState ? chgState.state : 'off'}">
-            </ha-switch>
+            <ha-entity-toggle .hass=${this._hass} .stateObj=${this._hass.states[entSwCharge]}></ha-entity-toggle>
           </div>
           <div class="s4-row">
             <div class="s4-left">
               <ha-icon icon="mdi:battery-charging"></ha-icon>
               <span>Discharging</span>
             </div>
-            <ha-switch 
-              .checked=${disState ? disState.state === 'on' : false} 
-              data-switch-entity="${entSwDischarge}"
-              data-status="${disState ? disState.state : 'off'}">
-            </ha-switch>
+            <ha-entity-toggle .hass=${this._hass} .stateObj=${this._hass.states[entSwDischarge]}></ha-entity-toggle>
           </div>
         </div>
       `;
@@ -471,14 +443,9 @@ class JkBmsCard extends HTMLElement {
       });
     });
 
-    // Attach switch toggle handlers
-    this.content.querySelectorAll('ha-switch').forEach(sw => {
-      sw.addEventListener('change', (e) => {
-        e.stopPropagation();
-        const entity = sw.getAttribute('data-switch-entity');
-        const status = sw.getAttribute('data-status');
-        this.toggleSwitch(entity, status);
-      });
+    // Pass hass reference to native HA toggle components
+    this.content.querySelectorAll('ha-entity-toggle').forEach(toggle => {
+      toggle.hass = this._hass;
     });
   }
 
@@ -530,21 +497,44 @@ class JkBmsCardEditor extends HTMLElement {
     sec2Items.forEach((item, idx) => {
       const decVal = item.decimals !== undefined ? item.decimals : 1;
       itemsHtml += `
-        <div style="border: 1px solid var(--divider-color, #444); border-radius: 6px; padding: 10px; margin-bottom: 10px; background: var(--card-background-color, #222);">
-          <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
-            <input type="text" placeholder="Label" value="${item.label || ''}" data-idx="${idx}" data-field="label" style="flex: 2; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
-            <input type="text" placeholder="Suffix" value="${item.entity_suffix || ''}" data-idx="${idx}" data-field="entity_suffix" style="flex: 2; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
-            <input type="text" placeholder="Unit" value="${item.unit || ''}" data-idx="${idx}" data-field="unit" style="flex: 1; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
-            <input type="number" placeholder="Dec" value="${decVal}" data-idx="${idx}" data-field="decimals" style="width: 50px; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;" title="Decimals">
-            <select data-idx="${idx}" data-field="column" style="flex: 1; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff;">
-              <option value="1" ${item.column == 1 ? 'selected' : ''}>Col 1</option>
-              <option value="2" ${item.column == 2 ? 'selected' : ''}>Col 2</option>
-            </select>
-            <button class="btn-del" data-idx="${idx}" style="background:#f44336; color:#fff; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">X</button>
+        <div class="sec2-item-card">
+          <div class="sec2-item-header">
+            <span class="sec2-item-title">Item ${idx + 1}</span>
+            <button class="btn-del" data-idx="${idx}">Remove</button>
           </div>
-          <div>
+          
+          <div class="sec2-grid-row">
+            <div class="field-group">
+              <label>Label</label>
+              <input type="text" placeholder="e.g. Battery Power:" value="${item.label || ''}" data-idx="${idx}" data-field="label">
+            </div>
+            <div class="field-group">
+              <label>Suffix</label>
+              <input type="text" placeholder="e.g. power" value="${item.entity_suffix || ''}" data-idx="${idx}" data-field="entity_suffix">
+            </div>
+          </div>
+
+          <div class="sec2-grid-row triplet">
+            <div class="field-group">
+              <label>Unit</label>
+              <input type="text" placeholder="e.g. W" value="${item.unit || ''}" data-idx="${idx}" data-field="unit">
+            </div>
+            <div class="field-group">
+              <label>Decimals</label>
+              <input type="number" min="0" max="6" value="${decVal}" data-idx="${idx}" data-field="decimals">
+            </div>
+            <div class="field-group">
+              <label>Column</label>
+              <select data-idx="${idx}" data-field="column">
+                <option value="1" ${item.column == 1 ? 'selected' : ''}>Column 1</option>
+                <option value="2" ${item.column == 2 ? 'selected' : ''}>Column 2</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-group" style="margin-top: 8px;">
+            <label>Override Entity (Optional)</label>
             <ha-entity-picker 
-              label="Override Entity (Optional)" 
               .hass=${this._hass} 
               .value="${item.entity || ''}" 
               data-idx="${idx}" 
@@ -570,6 +560,69 @@ class JkBmsCardEditor extends HTMLElement {
         .sec-title { font-size: 14px; font-weight: bold; margin: 16px 0 8px 0; border-bottom: 1px solid var(--divider-color, #444); padding-bottom: 4px; color: var(--primary-text-color, #fff); }
         .chk-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; }
         .chk-row label { cursor: pointer; font-size: 13px; }
+
+        /* Section 2 Structured Grid Editor */
+        .sec2-item-card {
+          border: 1px solid var(--divider-color, #444);
+          border-radius: 8px;
+          padding: 10px;
+          margin-bottom: 12px;
+          background: var(--card-background-color, #222);
+          box-sizing: border-box;
+          width: 100%;
+        }
+        .sec2-item-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+        .sec2-item-title {
+          font-weight: bold;
+          font-size: 12px;
+          color: var(--secondary-text-color, #aaa);
+          text-transform: uppercase;
+        }
+        .sec2-grid-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          margin-bottom: 8px;
+        }
+        .sec2-grid-row.triplet {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+        .field-group {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+        .field-group label {
+          font-size: 11px;
+          color: var(--secondary-text-color, #aaa);
+        }
+        .field-group input, .field-group select {
+          padding: 6px;
+          border-radius: 4px;
+          border: 1px solid #555;
+          background: #111;
+          color: #fff;
+          font-size: 12px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        .btn-del {
+          background: #f44336;
+          color: #fff;
+          border: none;
+          border-radius: 4px;
+          padding: 4px 8px;
+          font-size: 11px;
+          cursor: pointer;
+        }
+        .btn-del:hover {
+          background: #d32f2f;
+        }
       </style>
       <div>
         <div class="sec-title">General Settings</div>
