@@ -1,7 +1,14 @@
 /**
- * JK-BMS Custom Lovelace Card with Full Visual UI Editor
- * Replicates JK-BMS Android App UI with customizable alignment & column spacing
+ * JK-BMS Custom Lovelace Card (v1.1.0)
+ * Replicates JK-BMS App UI with HA Native Components, Dynamic Scaling & Precise Click Routing
  */
+
+// --- HELPER FUNCTION FOR DECIMAL FORMATTING ---
+function formatNumber(val, decimals = 1) {
+  const num = parseFloat(val);
+  if (isNaN(num)) return val;
+  return num.toFixed(decimals);
+}
 
 // --- MAIN CARD CLASS ---
 class JkBmsCard extends HTMLElement {
@@ -12,24 +19,32 @@ class JkBmsCard extends HTMLElement {
         <style>
           ha-card {
             background-color: var(--card-background-color, #1a1a1a);
-            color: #ffffff;
+            color: var(--primary-text-color, #ffffff);
             font-family: var(--paper-font-body1_-_font-family, Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
             padding: 12px;
             border-radius: 12px;
           }
           .section {
-            background: #121212;
+            background: var(--sec-bg-color, #121212);
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 10px;
           }
+          .section.transparent-bg {
+            background: transparent !important;
+            padding-left: 0;
+            padding-right: 0;
+          }
           .section:last-child {
             margin-bottom: 0;
           }
+
           /* Section 1 */
+          .s1-container {
+            font-size: calc(13px * var(--s1-scale, 1));
+          }
           .s1-header {
             text-align: center;
-            font-size: 14px;
             margin-bottom: 8px;
             font-weight: 500;
           }
@@ -40,17 +55,20 @@ class JkBmsCard extends HTMLElement {
           .s1-status-row {
             display: flex;
             justify-content: space-around;
-            font-size: 13px;
           }
           .s1-status-val {
             color: var(--primary-green-color, #2e7d32);
             font-weight: bold;
           }
+
           /* Section 2 */
+          .s2-container {
+            font-size: calc(12px * var(--s2-scale, 1));
+          }
           .s2-main-vals {
             display: flex;
             justify-content: space-around;
-            font-size: 26px;
+            font-size: calc(24px * var(--s2-scale, 1));
             font-weight: bold;
             color: var(--primary-green-color, #2e7d32);
             margin-bottom: 8px;
@@ -59,41 +77,35 @@ class JkBmsCard extends HTMLElement {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 0 24px;
-            font-size: 12px;
           }
           .s2-col {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
           }
           .s2-item {
             display: flex;
             gap: 6px;
           }
-          .s2-item.align-center {
-            justify-content: center;
-          }
-          .s2-item.align-space-between {
-            justify-content: space-between;
-          }
-          .s2-item.align-flex-start {
-            justify-content: flex-start;
-          }
-          .s2-item.align-flex-end {
-            justify-content: flex-end;
-          }
-          .s2-label { color: #ffffff; }
+          .s2-item.align-center { justify-content: center; }
+          .s2-item.align-space-between { justify-content: space-between; }
+          .s2-item.align-flex-start { justify-content: flex-start; }
+          .s2-item.align-flex-end { justify-content: flex-end; }
+          .s2-label { color: var(--primary-text-color, #ffffff); }
           .s2-val {
-            color: var(--sec2-value-color, #ffffff);
+            color: var(--sec2-val-final-color, #ffffff);
             font-weight: 500;
           }
+
           /* Section 3 */
+          .s3-container {
+            font-size: calc(12px * var(--s3-scale, 1));
+          }
           .s3-title {
             text-align: center;
             font-weight: bold;
-            font-size: 14px;
+            font-size: calc(14px * var(--s3-scale, 1));
             margin-bottom: 8px;
-            color: #ffffff;
           }
           .cells-grid {
             display: grid;
@@ -101,18 +113,21 @@ class JkBmsCard extends HTMLElement {
             column-gap: 28px;
             row-gap: 4px;
             font-family: monospace;
-            font-size: 12px;
           }
           .cell-row {
             display: flex;
             justify-content: space-between;
           }
-          .cell-num { color: #ffffff; }
-          .cell-v { color: #ffffff; }
+          .cell-num { color: var(--primary-text-color, #ffffff); }
+          .cell-v { color: var(--primary-text-color, #ffffff); }
           .cell-v.max-v { color: var(--max-cell-color, #2196f3) !important; font-weight: bold; }
           .cell-v.min-v { color: var(--min-cell-color, #f44336) !important; font-weight: bold; }
-          .cell-r { color: #ffffff; }
+          .cell-r { color: var(--primary-text-color, #ffffff); }
+
           /* Section 4 */
+          .s4-container {
+            font-size: calc(13px * var(--s4-scale, 1));
+          }
           .s4-row {
             display: flex;
             align-items: center;
@@ -124,7 +139,16 @@ class JkBmsCard extends HTMLElement {
             align-items: center;
             gap: 10px;
           }
-          .clickable { cursor: pointer; }
+
+          /* Clickable values indicator */
+          .clickable-val {
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+          }
+          .clickable-val:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+          }
         </style>
         <ha-card id="card-content"></ha-card>
       `;
@@ -148,6 +172,15 @@ class JkBmsCard extends HTMLElement {
       show_section_4: true,
       show_cells_title: true,
       sec2_align: "center",
+      sec2_decimals: 1,
+      sec3_decimals: 1,
+      s1_scale: 1.0,
+      s2_scale: 1.0,
+      s3_scale: 1.0,
+      s4_scale: 1.0,
+      use_primary_color_sec2: false,
+      remove_section_bg: false,
+      section_bg_color: "#121212",
       primary_green_color: "#2e7d32",
       time_color: "#2196f3",
       max_cell_color: "#2196f3",
@@ -160,17 +193,30 @@ class JkBmsCard extends HTMLElement {
     this._config = Object.assign({}, config);
     this._prefix = this._config.prefix || 'jk-bms';
     
-    // Colors
+    // Formatting & Scaling
+    this._sec2Decimals = this._config.sec2_decimals !== undefined ? parseInt(this._config.sec2_decimals, 10) : 1;
+    this._sec3Decimals = this._config.sec3_decimals !== undefined ? parseInt(this._config.sec3_decimals, 10) : 1;
+    
+    this._s1Scale = this._config.s1_scale || 1.0;
+    this._s2Scale = this._config.s2_scale || 1.0;
+    this._s3Scale = this._config.s3_scale || 1.0;
+    this._s4Scale = this._config.s4_scale || 1.0;
+
+    // Background & Colors
+    this._removeBg = this._config.remove_section_bg === true;
+    this._secBgColor = this._config.section_bg_color || '#121212';
+    this._usePrimaryColorSec2 = this._config.use_primary_color_sec2 === true;
+
     this._greenColor = this._config.primary_green_color || '#2e7d32';
     this._timeColor = this._config.time_color || '#2196f3';
     this._maxCellColor = this._config.max_cell_color || '#2196f3';
     this._minCellColor = this._config.min_cell_color || '#f44336';
     this._sec2ValColor = this._config.sec2_value_color || '#ffffff';
 
-    // Alignment for Section 2 items (default: center)
+    // Alignment
     this._sec2Align = this._config.sec2_align || 'center';
 
-    // Visibility
+    // Section Visibility
     this._showS1 = this._config.show_section_1 !== false;
     this._showS2 = this._config.show_section_2 !== false;
     this._showS3 = this._config.show_section_3 !== false;
@@ -179,13 +225,13 @@ class JkBmsCard extends HTMLElement {
     
     this._cellCount = parseInt(this._config.cell_count || 16, 10);
 
-    // Section 2 Items
+    // Default Section 2 Items mapped to accurate sensor suffixes
     this._sec2Items = this._config.sec2_items || [
       { label: 'Battery Power:', entity_suffix: 'power', unit: 'W', column: 1 },
-      { label: 'Remain Battery:', entity_suffix: 'capacity_remaining_percentage', unit: '%', column: 2 },
-      { label: 'Battery Capacity:', entity_suffix: 'total_capacity', unit: 'Ah', column: 1 },
+      { label: 'Remain Battery:', entity_suffix: 'state_of_charge', unit: '%', column: 2 },
+      { label: 'Battery Capacity:', entity_suffix: 'full_charge_capacity', unit: 'Ah', column: 1 },
       { label: 'Remain Capacity:', entity_suffix: 'capacity_remaining', unit: 'Ah', column: 2 },
-      { label: 'Cycle Capacity:', entity_suffix: 'charging_cycles_capacity', unit: 'Ah', column: 1 },
+      { label: 'Cycle Capacity:', entity_suffix: 'total_charging_cycle_capacity', unit: 'Ah', column: 1 },
       { label: 'Cycle Count:', entity_suffix: 'charging_cycles', unit: '', column: 2 },
       { label: 'Ave. Cell Vol.:', entity_suffix: 'average_cell_voltage', unit: 'V', column: 1 },
       { label: 'Delta Cell Vol.:', entity_suffix: 'delta_cell_voltage', unit: 'V', column: 2 },
@@ -212,14 +258,14 @@ class JkBmsCard extends HTMLElement {
   }
 
   fireMoreInfo(entityId) {
-    if (!entityId || !this._hass.states[entityId]) return;
+    if (!entityId || !this._hass || !this._hass.states[entityId]) return;
     const event = new Event('hass-more-info', { bubbles: true, composed: true });
     event.detail = { entityId };
     this.dispatchEvent(event);
   }
 
   toggleSwitch(entityId, currentStatus) {
-    if (!entityId || !this._hass.states[entityId]) return;
+    if (!entityId || !this._hass || !this._hass.states[entityId]) return;
     const service = currentStatus === 'on' ? 'turn_off' : 'turn_on';
     this._hass.callService('switch', service, { entity_id: entityId });
   }
@@ -227,23 +273,37 @@ class JkBmsCard extends HTMLElement {
   render() {
     if (!this._hass) return;
 
+    // Set Dynamic CSS Variables
     this.style.setProperty('--primary-green-color', this._greenColor);
     this.style.setProperty('--time-color', this._timeColor);
     this.style.setProperty('--max-cell-color', this._maxCellColor);
     this.style.setProperty('--min-cell-color', this._minCellColor);
-    this.style.setProperty('--sec2-value-color', this._sec2ValColor);
+    this.style.setProperty('--sec-bg-color', this._secBgColor);
+    this.style.setProperty('--s1-scale', this._s1Scale);
+    this.style.setProperty('--s2-scale', this._s2Scale);
+    this.style.setProperty('--s3-scale', this._s3Scale);
+    this.style.setProperty('--s4-scale', this._s4Scale);
 
-    const entTime = this.getEntity('uptime', this._config.entity_uptime);
+    const valColorSec2 = this._usePrimaryColorSec2 ? 'var(--primary-color, #03a9f4)' : this._sec2ValColor;
+    this.style.setProperty('--sec2-val-final-color', valColorSec2);
+
+    const bgClass = this._removeBg ? 'transparent-bg' : '';
+
+    // Entity mapping for Section 1
+    const entTime = this.getEntity('total_runtime_formatted', this._config.entity_total_runtime_formatted);
     const entChargeState = this.getEntity('charging', this._config.entity_charging_state);
     const entDischargeState = this.getEntity('discharging', this._config.entity_discharging_state);
     const entBalancingState = this.getEntity('balancing', this._config.entity_balancing_state);
 
+    // Entity mapping for Section 2 Header
     const entTotalV = this.getEntity('total_voltage', this._config.entity_total_voltage);
     const entCurrent = this.getEntity('current', this._config.entity_current);
 
+    // Section 3 Max/Min indicators
     const entMaxCellNum = this.getEntity('max_voltage_cell', this._config.entity_max_voltage_cell);
     const entMinCellNum = this.getEntity('min_voltage_cell', this._config.entity_min_voltage_cell);
 
+    // Section 4 Switches
     const entSwBalancer = this.getSwitchEntity('balancer', this._config.entity_switch_balancer);
     const entSwCharge = this.getSwitchEntity('charging', this._config.entity_switch_charging);
     const entSwDischarge = this.getSwitchEntity('discharging', this._config.entity_switch_discharging);
@@ -256,14 +316,14 @@ class JkBmsCard extends HTMLElement {
     // --- SECTION 1 ---
     if (this._showS1) {
       html += `
-        <div class="section">
-          <div class="s1-header clickable" data-entity="${entTime}">
-            Time: <span class="s1-time">${this.getVal(entTime)}</span>
+        <div class="section ${bgClass} s1-container">
+          <div class="s1-header">
+            Time: <span class="s1-time clickable-val" data-entity="${entTime}">${this.getVal(entTime)}</span>
           </div>
           <div class="s1-status-row">
-            <div class="clickable" data-entity="${entChargeState}">Charge: <span class="s1-status-val">${this.getVal(entChargeState).toUpperCase()}</span></div>
-            <div class="clickable" data-entity="${entDischargeState}">Discharge: <span class="s1-status-val">${this.getVal(entDischargeState).toUpperCase()}</span></div>
-            <div class="clickable" data-entity="${entBalancingState}">Balance: <span class="s1-status-val">${this.getVal(entBalancingState).toUpperCase()}</span></div>
+            <div>Charge: <span class="s1-status-val clickable-val" data-entity="${entChargeState}">${this.getVal(entChargeState).toUpperCase()}</span></div>
+            <div>Discharge: <span class="s1-status-val clickable-val" data-entity="${entDischargeState}">${this.getVal(entDischargeState).toUpperCase()}</span></div>
+            <div>Balance: <span class="s1-status-val clickable-val" data-entity="${entBalancingState}">${this.getVal(entBalancingState).toUpperCase()}</span></div>
           </div>
         </div>
       `;
@@ -276,13 +336,14 @@ class JkBmsCard extends HTMLElement {
 
       this._sec2Items.forEach((item, index) => {
         const entId = item.entity || this.getEntity(item.entity_suffix);
-        const val = this.getVal(entId);
+        const rawVal = this.getVal(entId);
+        const formattedVal = formatNumber(rawVal, this._sec2Decimals);
         const unitStr = item.unit ? ` ${item.unit}` : '';
 
         const itemHtml = `
-          <div class="s2-item align-${this._sec2Align} clickable" data-entity="${entId}">
+          <div class="s2-item align-${this._sec2Align}">
             <span class="s2-label">${item.label}</span>
-            <span class="s2-val">${val}${unitStr}</span>
+            <span class="s2-val clickable-val" data-entity="${entId}">${formattedVal}${unitStr}</span>
           </div>
         `;
 
@@ -291,11 +352,14 @@ class JkBmsCard extends HTMLElement {
         else col2Html += itemHtml;
       });
 
+      const totalVFormatted = formatNumber(this.getVal(entTotalV), this._sec2Decimals);
+      const currentFormatted = formatNumber(this.getVal(entCurrent), this._sec2Decimals);
+
       html += `
-        <div class="section">
+        <div class="section ${bgClass} s2-container">
           <div class="s2-main-vals">
-            <span class="clickable" data-entity="${entTotalV}">${this.getVal(entTotalV)} V</span>
-            <span class="clickable" data-entity="${entCurrent}">${this.getVal(entCurrent)} A</span>
+            <span class="clickable-val" data-entity="${entTotalV}">${totalVFormatted} V</span>
+            <span class="clickable-val" data-entity="${entCurrent}">${currentFormatted} A</span>
           </div>
           <div class="s2-columns">
             <div class="s2-col">${col1Html}</div>
@@ -313,11 +377,14 @@ class JkBmsCard extends HTMLElement {
 
       for (let i = 1; i <= this._cellCount; i++) {
         const cellIdStr = i.toString().padStart(2, '0');
-        const entCellV = this.getEntity(`cell_${i}_voltage`, this._config[`entity_cell_${i}_voltage`]);
-        const entCellR = this.getEntity(`cell_${i}_resistance`, this._config[`entity_cell_${i}_resistance`]);
+        const entCellV = this.getEntity(`cell_voltage_${i}`, this._config[`entity_cell_voltage_${i}`]);
+        const entCellR = this.getEntity(`cell_resistance_${i}`, this._config[`entity_cell_resistance_${i}`]);
 
-        const valV = this.getVal(entCellV, '0.000');
-        const valR = this.getVal(entCellR, '0.000');
+        const rawV = this.getVal(entCellV, '0.0');
+        const rawR = this.getVal(entCellR, '0.0');
+
+        const valV = formatNumber(rawV, this._sec3Decimals);
+        const valR = formatNumber(rawR, this._sec3Decimals);
 
         let colorClass = '';
         if (i === maxCellNum) colorClass = 'max-v';
@@ -326,9 +393,9 @@ class JkBmsCard extends HTMLElement {
         const rowHtml = `
           <div class="cell-row">
             <span class="cell-num">${cellIdStr}.</span>
-            <span class="cell-v ${colorClass} clickable" data-entity="${entCellV}">${valV} V</span>
+            <span class="cell-v ${colorClass} clickable-val" data-entity="${entCellV}">${valV} V</span>
             <span style="color: #666;">/</span>
-            <span class="cell-r clickable" data-entity="${entCellR}">${valR} Ω</span>
+            <span class="cell-r clickable-val" data-entity="${entCellR}">${valR} Ω</span>
           </div>
         `;
 
@@ -337,7 +404,7 @@ class JkBmsCard extends HTMLElement {
       }
 
       html += `
-        <div class="section">
+        <div class="section ${bgClass} s3-container">
           ${this._showCellsTitle ? '<div class="s3-title">Cells</div>' : ''}
           <div class="cells-grid">
             <div>${leftCellsHtml}</div>
@@ -354,9 +421,9 @@ class JkBmsCard extends HTMLElement {
       const disState = this._hass.states[entSwDischarge];
 
       html += `
-        <div class="section">
+        <div class="section ${bgClass} s4-container">
           <div class="s4-row">
-            <div class="s4-left clickable" data-entity="${entSwBalancer}">
+            <div class="s4-left">
               <ha-icon icon="mdi:scale-balance"></ha-icon>
               <span>Balancer</span>
             </div>
@@ -367,7 +434,7 @@ class JkBmsCard extends HTMLElement {
             </ha-switch>
           </div>
           <div class="s4-row">
-            <div class="s4-left clickable" data-entity="${entSwCharge}">
+            <div class="s4-left">
               <ha-icon icon="mdi:battery-charging"></ha-icon>
               <span>Charging</span>
             </div>
@@ -378,7 +445,7 @@ class JkBmsCard extends HTMLElement {
             </ha-switch>
           </div>
           <div class="s4-row">
-            <div class="s4-left clickable" data-entity="${entSwDischarge}">
+            <div class="s4-left">
               <ha-icon icon="mdi:battery-charging"></ha-icon>
               <span>Discharging</span>
             </div>
@@ -394,7 +461,8 @@ class JkBmsCard extends HTMLElement {
 
     this.content.innerHTML = html;
 
-    this.content.querySelectorAll('.clickable').forEach(el => {
+    // Attach click events exclusively to value spans
+    this.content.querySelectorAll('.clickable-val').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         const entity = el.getAttribute('data-entity');
@@ -402,6 +470,7 @@ class JkBmsCard extends HTMLElement {
       });
     });
 
+    // Attach switch toggle handlers
     this.content.querySelectorAll('ha-switch').forEach(sw => {
       sw.addEventListener('change', (e) => {
         e.stopPropagation();
@@ -417,7 +486,7 @@ class JkBmsCard extends HTMLElement {
   }
 }
 
-// --- VISUAL UI CARD EDITOR ---
+// --- VISUAL UI CARD EDITOR (USING HA NATIVE COMPONENTS) ---
 class JkBmsCardEditor extends HTMLElement {
   setConfig(config) {
     this._config = Object.assign({}, config);
@@ -426,17 +495,27 @@ class JkBmsCardEditor extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    if (this.hasRendered) {
+      this.updateEntityPickers();
+    }
+  }
+
+  updateEntityPickers() {
+    this.querySelectorAll('ha-entity-picker').forEach(picker => {
+      picker.hass = this._hass;
+    });
   }
 
   render() {
     if (!this._config) return;
+    this.hasRendered = true;
 
     const sec2Items = this._config.sec2_items || [
       { label: 'Battery Power:', entity_suffix: 'power', unit: 'W', column: 1 },
-      { label: 'Remain Battery:', entity_suffix: 'capacity_remaining_percentage', unit: '%', column: 2 },
-      { label: 'Battery Capacity:', entity_suffix: 'total_capacity', unit: 'Ah', column: 1 },
+      { label: 'Remain Battery:', entity_suffix: 'state_of_charge', unit: '%', column: 2 },
+      { label: 'Battery Capacity:', entity_suffix: 'full_charge_capacity', unit: 'Ah', column: 1 },
       { label: 'Remain Capacity:', entity_suffix: 'capacity_remaining', unit: 'Ah', column: 2 },
-      { label: 'Cycle Capacity:', entity_suffix: 'charging_cycles_capacity', unit: 'Ah', column: 1 },
+      { label: 'Cycle Capacity:', entity_suffix: 'total_charging_cycle_capacity', unit: 'Ah', column: 1 },
       { label: 'Cycle Count:', entity_suffix: 'charging_cycles', unit: '', column: 2 },
       { label: 'Ave. Cell Vol.:', entity_suffix: 'average_cell_voltage', unit: 'V', column: 1 },
       { label: 'Delta Cell Vol.:', entity_suffix: 'delta_cell_voltage', unit: 'V', column: 2 },
@@ -449,18 +528,23 @@ class JkBmsCardEditor extends HTMLElement {
     let itemsHtml = '';
     sec2Items.forEach((item, idx) => {
       itemsHtml += `
-        <div style="border: 1px solid #444; border-radius: 6px; padding: 8px; margin-bottom: 8px; background: #222;">
-          <div style="display: flex; gap: 8px; margin-bottom: 6px;">
-            <input type="text" placeholder="Label" value="${item.label || ''}" data-idx="${idx}" data-field="label" style="flex:2; padding:4px;">
-            <input type="text" placeholder="Suffix" value="${item.entity_suffix || ''}" data-idx="${idx}" data-field="entity_suffix" style="flex:2; padding:4px;">
-            <input type="text" placeholder="Unit" value="${item.unit || ''}" data-idx="${idx}" data-field="unit" style="flex:1; padding:4px;">
-            <select data-idx="${idx}" data-field="column" style="flex:1; padding:4px;">
-              <option value="1" ${item.column == 1 ? 'selected' : ''}>Col 1</option>
-              <option value="2" ${item.column == 2 ? 'selected' : ''}>Col 2</option>
-            </select>
-            <button class="btn-del" data-idx="${idx}" style="background:#f44336; color:#fff; border:none; border-radius:4px; padding:0 8px; cursor:pointer;">X</button>
+        <div style="border: 1px solid var(--divider-color, #444); border-radius: 6px; padding: 10px; margin-bottom: 10px; background: var(--card-background-color, #222);">
+          <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+            <ha-textfield label="Label" .value="${item.label || ''}" data-idx="${idx}" data-field="label" style="flex: 2;"></ha-textfield>
+            <ha-textfield label="Suffix" .value="${item.entity_suffix || ''}" data-idx="${idx}" data-field="entity_suffix" style="flex: 2;"></ha-textfield>
+            <ha-textfield label="Unit" .value="${item.unit || ''}" data-idx="${idx}" data-field="unit" style="flex: 1;"></ha-textfield>
+            <button class="btn-del" data-idx="${idx}" style="background:#f44336; color:#fff; border:none; border-radius:4px; padding:8px 12px; cursor:pointer;">X</button>
           </div>
-          <input type="text" placeholder="Full Entity (Optional override)" value="${item.entity || ''}" data-idx="${idx}" data-field="entity" style="width: 96%; padding:4px;">
+          <div style="margin-top: 6px;">
+            <ha-entity-picker 
+              label="Override Entity (Optional)" 
+              .hass=${this._hass} 
+              .value="${item.entity || ''}" 
+              data-idx="${idx}" 
+              data-field="entity"
+              allow-custom-entity>
+            </ha-entity-picker>
+          </div>
         </div>
       `;
     });
@@ -469,58 +553,114 @@ class JkBmsCardEditor extends HTMLElement {
 
     this.innerHTML = `
       <style>
-        .editor-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .editor-row label { font-weight: bold; }
-        .editor-row input, .editor-row select { padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; }
-        .sec-title { font-size: 15px; font-weight: bold; margin: 16px 0 8px 0; border-bottom: 1px solid #444; padding-bottom: 4px; }
+        .editor-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 10px; }
+        .editor-row label { font-weight: 500; font-size: 14px; }
+        .sec-title { font-size: 15px; font-weight: bold; margin: 18px 0 10px 0; border-bottom: 1px solid var(--divider-color, #444); padding-bottom: 4px; }
+        ha-textfield, ha-select, ha-entity-picker { width: 100%; }
       </style>
       <div>
         <div class="sec-title">General Settings</div>
-        <div class="editor-row"><label>Device Prefix:</label><input type="text" id="prefix" value="${this._config.prefix || 'jk-bms'}"></div>
-        <div class="editor-row"><label>Cell Count:</label><input type="number" id="cell_count" value="${this._config.cell_count || 16}"></div>
+        <div class="editor-row">
+          <ha-textfield id="prefix" label="Device Prefix" .value="${this._config.prefix || 'jk-bms'}"></ha-textfield>
+        </div>
+        <div class="editor-row">
+          <ha-textfield id="cell_count" type="number" label="Cell Count" .value="${this._config.cell_count || 16}"></ha-textfield>
+        </div>
+
+        <div class="sec-title">Formatting & Decimals</div>
+        <div class="editor-row">
+          <ha-textfield id="sec2_decimals" type="number" label="Section 2 Decimals" .value="${this._config.sec2_decimals !== undefined ? this._config.sec2_decimals : 1}"></ha-textfield>
+          <ha-textfield id="sec3_decimals" type="number" label="Section 3 Cell Decimals" .value="${this._config.sec3_decimals !== undefined ? this._config.sec3_decimals : 1}"></ha-textfield>
+        </div>
+
+        <div class="sec-title">Section Scaling (Font Size)</div>
+        <div class="editor-row">
+          <ha-textfield id="s1_scale" type="number" step="0.1" label="Section 1 Scale" .value="${this._config.s1_scale || 1.0}"></ha-textfield>
+          <ha-textfield id="s2_scale" type="number" step="0.1" label="Section 2 Scale" .value="${this._config.s2_scale || 1.0}"></ha-textfield>
+        </div>
+        <div class="editor-row">
+          <ha-textfield id="s3_scale" type="number" step="0.1" label="Section 3 Scale" .value="${this._config.s3_scale || 1.0}"></ha-textfield>
+          <ha-textfield id="s4_scale" type="number" step="0.1" label="Section 4 Scale" .value="${this._config.s4_scale || 1.0}"></ha-textfield>
+        </div>
 
         <div class="sec-title">Section Visibility</div>
-        <div class="editor-row"><label>Show Section 1 (Header Status):</label><input type="checkbox" id="show_section_1" ${this._config.show_section_1 !== false ? 'checked' : ''}></div>
-        <div class="editor-row"><label>Show Section 2 (Grid Data):</label><input type="checkbox" id="show_section_2" ${this._config.show_section_2 !== false ? 'checked' : ''}></div>
-        <div class="editor-row"><label>Show Section 3 (Cell Voltages):</label><input type="checkbox" id="show_section_3" ${this._config.show_section_3 !== false ? 'checked' : ''}></div>
-        <div class="editor-row"><label>Show Section 4 (Switches):</label><input type="checkbox" id="show_section_4" ${this._config.show_section_4 !== false ? 'checked' : ''}></div>
-        <div class="editor-row"><label>Show "Cells" Title in Sec 3:</label><input type="checkbox" id="show_cells_title" ${this._config.show_cells_title !== false ? 'checked' : ''}></div>
+        <div class="editor-row">
+          <ha-formfield label="Show Section 1 (Header Status)">
+            <ha-checkbox id="show_section_1" .checked=${this._config.show_section_1 !== false}></ha-checkbox>
+          </ha-formfield>
+        </div>
+        <div class="editor-row">
+          <ha-formfield label="Show Section 2 (Grid Data)">
+            <ha-checkbox id="show_section_2" .checked=${this._config.show_section_2 !== false}></ha-checkbox>
+          </ha-formfield>
+        </div>
+        <div class="editor-row">
+          <ha-formfield label="Show Section 3 (Cell Voltages)">
+            <ha-checkbox id="show_section_3" .checked=${this._config.show_section_3 !== false}></ha-checkbox>
+          </ha-formfield>
+        </div>
+        <div class="editor-row">
+          <ha-formfield label="Show Section 4 (Switches)">
+            <ha-checkbox id="show_section_4" .checked=${this._config.show_section_4 !== false}></ha-checkbox>
+          </ha-formfield>
+        </div>
+        <div class="editor-row">
+          <ha-formfield label="Show 'Cells' Title in Section 3">
+            <ha-checkbox id="show_cells_title" .checked=${this._config.show_cells_title !== false}></ha-checkbox>
+          </ha-formfield>
+        </div>
 
-        <div class="sec-title">Section 2 Layout & Text Alignment</div>
+        <div class="sec-title">Section 2 Alignment & Styling</div>
         <div class="editor-row">
           <label>Sec 2 Text Alignment:</label>
-          <select id="sec2_align">
+          <select id="sec2_align" style="padding: 8px; background: #111; color: #fff; border-radius: 4px; border: 1px solid #555;">
             <option value="center" ${alignVal === 'center' ? 'selected' : ''}>Centered (Default)</option>
             <option value="space-between" ${alignVal === 'space-between' ? 'selected' : ''}>Spread (Left & Right Ends)</option>
             <option value="flex-start" ${alignVal === 'flex-start' ? 'selected' : ''}>Align Left</option>
             <option value="flex-end" ${alignVal === 'flex-end' ? 'selected' : ''}>Align Right</option>
           </select>
         </div>
+        <div class="editor-row">
+          <ha-formfield label="Use HA Theme Primary Color for Section 2 Values">
+            <ha-checkbox id="use_primary_color_sec2" .checked=${this._config.use_primary_color_sec2 === true}></ha-checkbox>
+          </ha-formfield>
+        </div>
+
+        <div class="sec-title">Background Customization</div>
+        <div class="editor-row">
+          <ha-formfield label="Remove Section Backgrounds (Transparent)">
+            <ha-checkbox id="remove_section_bg" .checked=${this._config.remove_section_bg === true}></ha-checkbox>
+          </ha-formfield>
+        </div>
+        <div class="editor-row">
+          <label>Section Background Color:</label>
+          <input type="color" id="section_bg_color" value="${this._config.section_bg_color || '#121212'}">
+        </div>
 
         <div class="sec-title">Color Customization</div>
-        <div class="editor-row"><label>Primary Green Color:</label><input type="color" id="primary_green_color" value="${this._config.primary_green_color || '#2e7d32'}"></div>
-        <div class="editor-row"><label>Time Color:</label><input type="color" id="time_color" value="${this._config.time_color || '#2196f3'}"></div>
+        <div class="editor-row"><label>Primary Status Green:</label><input type="color" id="primary_green_color" value="${this._config.primary_green_color || '#2e7d32'}"></div>
+        <div class="editor-row"><label>Uptime Blue Color:</label><input type="color" id="time_color" value="${this._config.time_color || '#2196f3'}"></div>
         <div class="editor-row"><label>Highest Cell Color (Blue):</label><input type="color" id="max_cell_color" value="${this._config.max_cell_color || '#2196f3'}"></div>
         <div class="editor-row"><label>Lowest Cell Color (Red):</label><input type="color" id="min_cell_color" value="${this._config.min_cell_color || '#f44336'}"></div>
-        <div class="editor-row"><label>Section 2 Values Color:</label><input type="color" id="sec2_value_color" value="${this._config.sec2_value_color || '#ffffff'}"></div>
+        <div class="editor-row"><label>Section 2 Custom Value Color:</label><input type="color" id="sec2_value_color" value="${this._config.sec2_value_color || '#ffffff'}"></div>
 
-        <div class="sec-title">Section 2 Items & Column Placement</div>
+        <div class="sec-title">Section 2 Items & Dynamic Configuration</div>
         <div id="sec2-items-container">${itemsHtml}</div>
-        <button id="btn-add-item" style="background:#2e7d32; color:#fff; border:none; border-radius:4px; padding:6px 12px; cursor:pointer; margin-top:4px;">+ Add Item</button>
+        <button id="btn-add-item" style="background:var(--primary-color, #2e7d32); color:#fff; border:none; border-radius:4px; padding:8px 16px; cursor:pointer; margin-top:6px; font-weight:bold;">+ Add Item</button>
       </div>
     `;
 
-    // Bind inputs
-    this.querySelectorAll('input[type="text"], input[type="number"], input[type="color"], select#sec2_align').forEach(el => {
-      if (el.id) el.addEventListener('change', this._valueChanged.bind(this));
+    // Bind Native UI input listeners
+    this.querySelectorAll('ha-textfield, select#sec2_align, input[type="color"]').forEach(el => {
+      el.addEventListener('change', this._valueChanged.bind(this));
     });
 
-    this.querySelectorAll('input[type="checkbox"]').forEach(el => {
+    this.querySelectorAll('ha-checkbox').forEach(el => {
       el.addEventListener('change', this._checkboxChanged.bind(this));
     });
 
-    // Bind Section 2 item dynamic updates
-    this.querySelectorAll('#sec2-items-container input, #sec2-items-container select').forEach(el => {
+    // Dynamic Section 2 item listeners
+    this.querySelectorAll('#sec2-items-container ha-textfield, #sec2-items-container ha-entity-picker').forEach(el => {
       el.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-idx');
         const field = e.target.getAttribute('data-field');
@@ -530,7 +670,7 @@ class JkBmsCardEditor extends HTMLElement {
       });
     });
 
-    // Delete item
+    // Delete item listener
     this.querySelectorAll('.btn-del').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const idx = parseInt(e.target.getAttribute('data-idx'), 10);
@@ -540,7 +680,7 @@ class JkBmsCardEditor extends HTMLElement {
       });
     });
 
-    // Add item
+    // Add item listener
     const btnAdd = this.querySelector('#btn-add-item');
     if (btnAdd) {
       btnAdd.addEventListener('click', () => {
@@ -549,6 +689,8 @@ class JkBmsCardEditor extends HTMLElement {
         this._updateConfig('sec2_items', currentItems);
       });
     }
+
+    this.updateEntityPickers();
   }
 
   _valueChanged(e) {
@@ -575,7 +717,7 @@ class JkBmsCardEditor extends HTMLElement {
 customElements.define('jk-bms-card', JkBmsCard);
 customElements.define('jk-bms-card-editor', JkBmsCardEditor);
 
-// HACS Custom Card Picker Registration
+// HACS Custom Card Registration
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "jk-bms-card",
