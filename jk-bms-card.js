@@ -293,7 +293,7 @@ class JkBmsCard extends HTMLElement {
           <div class="cell-row">
             <span class="cell-num">${cellIdStr}.</span>
             <span class="cell-v clickable-val" id="cell-v-${i}" data-entity="${entCellV}">-- V</span>
-            <span style="color: #666;">/</span>
+            <span style="color: var(--primary-text-color, #ffffff);">/</span>
             <span class="cell-r clickable-val" id="cell-r-${i}" data-entity="${entCellR}">-- Ω</span>
           </div>
         `;
