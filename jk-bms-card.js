@@ -1,6 +1,6 @@
 /**
- * JK-BMS Custom Lovelace Card (v1.7.0)
- * Mobile optimized grid gaps and mΩ resistance format conversion toggle.
+ * JK-BMS Custom Lovelace Card (v1.8.0)
+ * Mobile optimized grid gaps and mΩ resistance format conversion with 0 decimals mode.
  */
 
 function formatNumber(val, decimals = 1) {
@@ -418,6 +418,9 @@ class JkBmsCard extends HTMLElement {
       const maxCellNum = parseInt(this.getVal(entMaxCellNum, '0'), 10);
       const minCellNum = parseInt(this.getVal(entMinCellNum, '0'), 10);
 
+      // In mΩ mode, resistance decimal precision is fixed to 0
+      const resDecimals = this._useMohmRes ? 0 : this._sec3Decimals;
+
       for (let i = 1; i <= this._cellCount; i++) {
         const entCellV = this.getEntity(`cell_voltage_${i}`, this._config[`entity_cell_voltage_${i}`], 'sensor');
         const entCellR = this.getEntity(`cell_resistance_${i}`, this._config[`entity_cell_resistance_${i}`], 'sensor');
@@ -439,9 +442,9 @@ class JkBmsCard extends HTMLElement {
           } else if (this._useMohmRes) {
             // Convert Ohms to mOhms if value is < 1, otherwise assume it's already mOhms
             const mOhmVal = rawR < 1 ? rawR * 1000 : rawR;
-            elR.textContent = `${formatNumber(mOhmVal, this._sec3Decimals)} mΩ`;
+            elR.textContent = `${formatNumber(mOhmVal, 0)} mΩ`;
           } else {
-            elR.textContent = `${formatNumber(rawR, this._sec3Decimals)} Ω`;
+            elR.textContent = `${formatNumber(rawR, resDecimals)} Ω`;
           }
         }
       }
@@ -567,12 +570,12 @@ class JkBmsCardEditor extends HTMLElement {
 
         <div class="sec-title">Formatting & Units</div>
         <div class="editor-row">
-          <label>Section 3 Cell Decimals:</label>
+          <label>Section 3 Cell Voltage Decimals:</label>
           <input type="number" id="sec3_decimals" value="${this._config.sec3_decimals !== undefined ? this._config.sec3_decimals : 1}">
         </div>
         <div class="chk-row">
           <input type="checkbox" id="use_mohm_res" ${this._config.use_mohm_res === true ? 'checked' : ''}>
-          <label for="use_mohm_res">Convert Cell Resistance to mΩ (e.g. 0.051 Ω → 51 mΩ)</label>
+          <label for="use_mohm_res">Convert Cell Resistance to mΩ with 0 decimals (e.g. 0.051 Ω → 51 mΩ)</label>
         </div>
 
         <div class="sec-title">Section Scaling (Font Size)</div>
