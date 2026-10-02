@@ -1,6 +1,6 @@
 /**
- * JK-BMS Custom Lovelace Card (v1.6.4)
- * Reduced Section 2 and Section 3 column gaps by half for improved mobile responsiveness.
+ * JK-BMS Custom Lovelace Card (v1.7.0)
+ * Mobile optimized grid gaps and mΩ resistance format conversion toggle.
  */
 
 function formatNumber(val, decimals = 1) {
@@ -104,6 +104,7 @@ class JkBmsCard extends HTMLElement {
       show_section_3: true,
       show_section_4: true,
       show_cells_title: true,
+      use_mohm_res: false,
       sec2_align: "center",
       sec3_decimals: 1,
       s1_scale: 1.0,
@@ -125,6 +126,7 @@ class JkBmsCard extends HTMLElement {
     this._prefix = this._config.prefix || 'jk-bms';
     
     this._sec3Decimals = this._config.sec3_decimals !== undefined ? parseInt(this._config.sec3_decimals, 10) : 1;
+    this._useMohmRes = this._config.use_mohm_res === true;
     this._s1Scale = this._config.s1_scale || 1.0;
     this._s2Scale = this._config.s2_scale || 1.0;
     this._s3Scale = this._config.s3_scale || 1.0;
@@ -294,7 +296,7 @@ class JkBmsCard extends HTMLElement {
             <span class="cell-num">${cellIdStr}.</span>
             <span class="cell-v clickable-val" id="cell-v-${i}" data-entity="${entCellV}">-- V</span>
             <span style="color: var(--primary-text-color, #ffffff);">/</span>
-            <span class="cell-r clickable-val" id="cell-r-${i}" data-entity="${entCellR}">-- Ω</span>
+            <span class="cell-r clickable-val" id="cell-r-${i}" data-entity="${entCellR}">--</span>
           </div>
         `;
 
@@ -431,7 +433,16 @@ class JkBmsCard extends HTMLElement {
         }
 
         if (elR) {
-          elR.textContent = `${formatNumber(this.getVal(entCellR, '0.0'), this._sec3Decimals)} Ω`;
+          const rawR = parseFloat(this.getVal(entCellR, '0.0'));
+          if (isNaN(rawR)) {
+            elR.textContent = `-- ${this._useMohmRes ? 'mΩ' : 'Ω'}`;
+          } else if (this._useMohmRes) {
+            // Convert Ohms to mOhms if value is < 1, otherwise assume it's already mOhms
+            const mOhmVal = rawR < 1 ? rawR * 1000 : rawR;
+            elR.textContent = `${formatNumber(mOhmVal, this._sec3Decimals)} mΩ`;
+          } else {
+            elR.textContent = `${formatNumber(rawR, this._sec3Decimals)} Ω`;
+          }
         }
       }
     }
@@ -554,10 +565,14 @@ class JkBmsCardEditor extends HTMLElement {
           </div>
         </div>
 
-        <div class="sec-title">Formatting & Decimals</div>
+        <div class="sec-title">Formatting & Units</div>
         <div class="editor-row">
           <label>Section 3 Cell Decimals:</label>
           <input type="number" id="sec3_decimals" value="${this._config.sec3_decimals !== undefined ? this._config.sec3_decimals : 1}">
+        </div>
+        <div class="chk-row">
+          <input type="checkbox" id="use_mohm_res" ${this._config.use_mohm_res === true ? 'checked' : ''}>
+          <label for="use_mohm_res">Convert Cell Resistance to mΩ (e.g. 0.051 Ω → 51 mΩ)</label>
         </div>
 
         <div class="sec-title">Section Scaling (Font Size)</div>
