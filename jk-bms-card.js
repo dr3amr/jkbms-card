@@ -48,7 +48,7 @@ class JkBmsCard extends HTMLElement {
 .s2-main-vals {
   display: flex;
   justify-content: space-around;
-  font-size: calc(28.8px * var(--s2-scale, 1));
+  font-size: calc(30px * var(--s2-scale, 1));
   font-weight: bold;
   color: var(--primary-green-color, #2e7d32);
   margin-bottom: 4px;
@@ -61,7 +61,7 @@ class JkBmsCard extends HTMLElement {
 .s2-col { 
   display: flex; 
   flex-direction: column; 
-  gap: 4px; /* Matches Section 3 row-gap */
+  gap: 6px; /* Matches Section 3 row-gap */
 }
 .s2-item { 
   display: flex; 
@@ -85,7 +85,7 @@ class JkBmsCard extends HTMLElement {
 .cells-grid > div {
   display: flex;
   flex-direction: column;
-  gap: 4px; /* Explicit flex gap matching Section 2 */
+  gap: 6px; /* Explicit flex gap matching Section 2 */
 }
 .cell-row { 
   display: flex; 
