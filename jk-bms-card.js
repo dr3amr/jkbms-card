@@ -1,6 +1,5 @@
 /**
- * JK-BMS Custom Lovelace Card (v1.8.0)
- * Mobile optimized grid gaps and mΩ resistance format conversion with 0 decimals mode.
+ * JK-BMS Custom Lovelace Card (v1.0.0)
  */
 
 function formatNumber(val, decimals = 1) {
@@ -38,14 +37,14 @@ class JkBmsCard extends HTMLElement {
           .section:last-child { margin-bottom: 0; }
 
           /* Section 1 */
-          .s1-container { font-size: calc(15.6px * var(--s1-scale, 1)); }
+          .s1-container { font-size: calc(14.5px * var(--s1-scale, 1)); }
           .s1-header { text-align: center; margin-bottom: 8px; font-weight: 500; }
           .s1-time { color: var(--time-color, #2196f3); font-weight: bold; }
           .s1-status-row { display: flex; justify-content: space-around; }
           .s1-status-val { color: var(--primary-green-color, #2e7d32); font-weight: bold; }
 
           /* Section 2 */
-          .s2-container { font-size: calc(14.4px * var(--s2-scale, 1)); }
+          .s2-container { font-size: calc(14.5px * var(--s2-scale, 1)); }
           .s2-main-vals {
             display: flex;
             justify-content: space-around;
@@ -65,9 +64,9 @@ class JkBmsCard extends HTMLElement {
           .s2-val { color: var(--sec2-val-final-color, #ffffff); font-weight: 500; }
 
           /* Section 3 */
-          .s3-container { font-size: calc(14.4px * var(--s3-scale, 1)); }
+          .s3-container { font-size: calc(14.5px * var(--s3-scale, 1)); }
           .s3-title { text-align: center; font-weight: bold; font-size: calc(16.8px * var(--s3-scale, 1)); margin-bottom: 8px; }
-          .cells-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; row-gap: 4px; font-family: monospace; }
+          .cells-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; row-gap: 4px; }
           .cell-row { display: flex; justify-content: center; gap: 6px; }
           .cell-num { color: var(--primary-text-color, #ffffff); }
           .cell-v { color: var(--primary-text-color, #ffffff); }
@@ -76,7 +75,7 @@ class JkBmsCard extends HTMLElement {
           .cell-r { color: var(--primary-text-color, #ffffff); }
 
           /* Section 4 */
-          .s4-container { font-size: calc(15.6px * var(--s4-scale, 1)); }
+          .s4-container { font-size: calc(14.5px * var(--s4-scale, 1)); }
           .s4-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
           .s4-left { display: flex; align-items: center; gap: 10px; }
 
