@@ -53,7 +53,7 @@ class JkBmsCard extends HTMLElement {
             color: var(--primary-green-color, #2e7d32);
             margin-bottom: 4px;
           }
-          .s2-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+          .s2-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 4px; }
           .s2-col { display: flex; flex-direction: column; gap: 4px; }
           .s2-item { display: flex; }
           .s2-item.align-center { justify-content: center; gap: 4px; }
