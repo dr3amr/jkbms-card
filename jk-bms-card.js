@@ -37,70 +37,46 @@ class JkBmsCard extends HTMLElement {
           .section:last-child { margin-bottom: 0; }
 
           /* Section 1 */
-          .s1-container { font-size: calc(14.5px * var(--s1-scale, 1)); }
+          .s1-container { font-size: calc(15.6px * var(--s1-scale, 1)); }
           .s1-header { text-align: center; margin-bottom: 8px; font-weight: 500; }
           .s1-time { color: var(--time-color, #2196f3); font-weight: bold; }
           .s1-status-row { display: flex; justify-content: space-around; }
           .s1-status-val { color: var(--primary-green-color, #2e7d32); font-weight: bold; }
 
           /* Section 2 */
-.s2-container { font-size: calc(14.4px * var(--s2-scale, 1)); }
-.s2-main-vals {
-  display: flex;
-  justify-content: space-around;
-  font-size: calc(30px * var(--s2-scale, 1));
-  font-weight: bold;
-  color: var(--primary-green-color, #2e7d32);
-  margin-bottom: 4px;
-}
-.s2-columns { 
-  display: grid; 
-  grid-template-columns: 1fr 1fr; 
-  column-gap: 14px; 
-}
-.s2-col { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 6px; /* Matches Section 3 row-gap */
-}
-.s2-item { 
-  display: flex; 
-  line-height: normal; /* Inherits standard system line height like Section 3 */
-}
-.s2-item.align-center { justify-content: center; gap: 6px; }
-.s2-item.align-space-between { justify-content: space-between; }
-.s2-item.align-flex-start { justify-content: flex-start; gap: 6px; }
-.s2-item.align-flex-end { justify-content: flex-end; gap: 6px; }
-.s2-label { color: var(--primary-text-color, #ffffff); }
-.s2-val { color: var(--sec2-val-final-color, #ffffff); font-weight: 500; }
+          .s2-container { font-size: calc(14.4px * var(--s2-scale, 1)); }
+          .s2-main-vals {
+            display: flex;
+            justify-content: space-around;
+            font-size: calc(28.8px * var(--s2-scale, 1));
+            font-weight: bold;
+            color: var(--primary-green-color, #2e7d32);
+            margin-bottom: 4px;
+          }
+          .s2-columns { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
+          .s2-col { display: flex; flex-direction: column; gap: 6px; }
+          .s2-item { display: flex; line-height: normal; }
+          .s2-item.align-center { justify-content: center; gap: 6px; }
+          .s2-item.align-space-between { justify-content: space-between; }
+          .s2-item.align-flex-start { justify-content: flex-start; gap: 6px; }
+          .s2-item.align-flex-end { justify-content: flex-end; gap: 6px; }
+          .s2-label { color: var(--primary-text-color, #ffffff); }
+          .s2-val { color: var(--sec2-val-final-color, #ffffff); font-weight: 500; }
 
-/* Section 3 */
-.s3-container { font-size: calc(14.4px * var(--s3-scale, 1)); }
-.s3-title { text-align: center; font-weight: bold; font-size: calc(16.8px * var(--s3-scale, 1)); margin-bottom: 8px; }
-.cells-grid { 
-  display: grid; 
-  grid-template-columns: 1fr 1fr; 
-  column-gap: 14px; 
-}
-.cells-grid > div {
-  display: flex;
-  flex-direction: column;
-  gap: 6px; /* Explicit flex gap matching Section 2 */
-}
-.cell-row { 
-  display: flex; 
-  justify-content: center; 
-  gap: 6px; 
-  line-height: normal; 
-}
-.cell-num { color: var(--primary-text-color, #ffffff); }
-.cell-v { color: var(--primary-text-color, #ffffff); }
-.cell-v.max-v { color: var(--max-cell-color, #2196f3) !important; font-weight: bold; }
-.cell-v.min-v { color: var(--min-cell-color, #f44336) !important; font-weight: bold; }
-.cell-r { color: var(--primary-text-color, #ffffff); }
+          /* Section 3 */
+          .s3-container { font-size: calc(14.4px * var(--s3-scale, 1)); }
+          .s3-title { text-align: center; font-weight: bold; font-size: calc(16.8px * var(--s3-scale, 1)); margin-bottom: 8px; }
+          .cells-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
+          .cells-grid > div { display: flex; flex-direction: column; gap: 6px; }
+          .cell-row { display: flex; justify-content: center; gap: 6px; line-height: normal; }
+          .cell-num { color: var(--primary-text-color, #ffffff); }
+          .cell-v { color: var(--primary-text-color, #ffffff); }
+          .cell-v.max-v { color: var(--max-cell-color, #2196f3) !important; font-weight: bold; }
+          .cell-v.min-v { color: var(--min-cell-color, #f44336) !important; font-weight: bold; }
+          .cell-r { color: var(--primary-text-color, #ffffff); }
 
           /* Section 4 */
-          .s4-container { font-size: calc(14.5px * var(--s4-scale, 1)); }
+          .s4-container { font-size: calc(15.6px * var(--s4-scale, 1)); }
           .s4-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
           .s4-left { display: flex; align-items: center; gap: 10px; }
 
@@ -442,7 +418,6 @@ class JkBmsCard extends HTMLElement {
       const maxCellNum = parseInt(this.getVal(entMaxCellNum, '0'), 10);
       const minCellNum = parseInt(this.getVal(entMinCellNum, '0'), 10);
 
-      // In mΩ mode, resistance decimal precision is fixed to 0
       const resDecimals = this._useMohmRes ? 0 : this._sec3Decimals;
 
       for (let i = 1; i <= this._cellCount; i++) {
@@ -464,7 +439,6 @@ class JkBmsCard extends HTMLElement {
           if (isNaN(rawR)) {
             elR.textContent = `-- ${this._useMohmRes ? 'mΩ' : 'Ω'}`;
           } else if (this._useMohmRes) {
-            // Convert Ohms to mOhms if value is < 1, otherwise assume it's already mOhms
             const mOhmVal = rawR < 1 ? rawR * 1000 : rawR;
             elR.textContent = `${formatNumber(mOhmVal, 0)} mΩ`;
           } else {
@@ -668,14 +642,26 @@ class JkBmsCardEditor extends HTMLElement {
         </div>
         <div class="editor-row">
           <label>Section Background Color:</label>
-          <input type="color" id="section_bg_color" value="${this._config.section_bg_color || '#121212'}">
+          <ha-color-picker id="section_bg_color" .value="${this._config.section_bg_color || '#121212'}"></ha-color-picker>
         </div>
 
         <div class="sec-title">Color Customization</div>
-        <div class="editor-row"><label>Primary Status Color:</label><input type="color" id="primary_green_color" value="${this._config.primary_green_color || '#2e7d32'}"></div>
-        <div class="editor-row"><label>Uptime Header Color:</label><input type="color" id="time_color" value="${this._config.time_color || '#2196f3'}"></div>
-        <div class="editor-row"><label>Highest Cell Color:</label><input type="color" id="max_cell_color" value="${this._config.max_cell_color || '#2196f3'}"></div>
-        <div class="editor-row"><label>Lowest Cell Color:</label><input type="color" id="min_cell_color" value="${this._config.min_cell_color || '#f44336'}"></div>
+        <div class="editor-row">
+          <label>Primary Status Color:</label>
+          <ha-color-picker id="primary_green_color" .value="${this._config.primary_green_color || '#2e7d32'}"></ha-color-picker>
+        </div>
+        <div class="editor-row">
+          <label>Uptime Header Color:</label>
+          <ha-color-picker id="time_color" .value="${this._config.time_color || '#2196f3'}"></ha-color-picker>
+        </div>
+        <div class="editor-row">
+          <label>Highest Cell Color:</label>
+          <ha-color-picker id="max_cell_color" .value="${this._config.max_cell_color || '#2196f3'}"></ha-color-picker>
+        </div>
+        <div class="editor-row">
+          <label>Lowest Cell Color:</label>
+          <ha-color-picker id="min_cell_color" .value="${this._config.min_cell_color || '#f44336'}"></ha-color-picker>
+        </div>
 
         <div class="sec-title">Section 2 Items & Dynamic Configuration</div>
         <div id="sec2-items-container">${itemsHtml}</div>
@@ -683,7 +669,7 @@ class JkBmsCardEditor extends HTMLElement {
       </div>
     `;
 
-    this.querySelectorAll('input[type="text"], input[type="number"], input[type="color"], select#sec2_align').forEach(el => {
+    this.querySelectorAll('input[type="text"], input[type="number"], select#sec2_align').forEach(el => {
       if (!el.getAttribute('data-field')) {
         el.addEventListener('change', this._valueChanged.bind(this));
       }
@@ -691,6 +677,13 @@ class JkBmsCardEditor extends HTMLElement {
 
     this.querySelectorAll('input[type="checkbox"]').forEach(el => {
       el.addEventListener('click', this._checkboxChanged.bind(this));
+    });
+
+    this.querySelectorAll('ha-color-picker').forEach(picker => {
+      picker.addEventListener('value-changed', (e) => {
+        if (!this._config || !picker.id) return;
+        this._updateConfig(picker.id, e.detail.value || picker.value);
+      });
     });
 
     this.querySelectorAll('#sec2-items-container input, #sec2-items-container select, #sec2-items-container ha-entity-picker').forEach(el => {
