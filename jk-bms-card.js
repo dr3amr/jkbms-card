@@ -44,35 +44,60 @@ class JkBmsCard extends HTMLElement {
           .s1-status-val { color: var(--primary-green-color, #2e7d32); font-weight: bold; }
 
           /* Section 2 */
-          .s2-container { font-size: calc(14.5px * var(--s2-scale, 1)); }
-          .s2-main-vals {
-            display: flex;
-            justify-content: space-around;
-            font-size: calc(28.8px * var(--s2-scale, 1));
-            font-weight: bold;
-            color: var(--primary-green-color, #2e7d32);
-            margin-bottom: 4px;
-          }
-          .s2-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-          .s2-col { display: flex; flex-direction: column; gap: 4px; }
-          .s2-item { display: flex; line-height: 1; margin: 0;}
-          .s2-item.align-center { justify-content: center; gap: 6px; }
-          .s2-item.align-space-between { justify-content: space-between; }
-          .s2-item.align-flex-start { justify-content: flex-start; gap: 6px; } 
-          .s2-item.align-flex-end { justify-content: flex-end; gap: 6px; }
-          .s2-label { color: var(--primary-text-color, #ffffff); }
-          .s2-val { color: var(--sec2-val-final-color, #ffffff); font-weight: 500; }
+.s2-container { font-size: calc(14.4px * var(--s2-scale, 1)); }
+.s2-main-vals {
+  display: flex;
+  justify-content: space-around;
+  font-size: calc(28.8px * var(--s2-scale, 1));
+  font-weight: bold;
+  color: var(--primary-green-color, #2e7d32);
+  margin-bottom: 4px;
+}
+.s2-columns { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  column-gap: 14px; 
+}
+.s2-col { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 4px; /* Matches Section 3 row-gap */
+}
+.s2-item { 
+  display: flex; 
+  line-height: normal; /* Inherits standard system line height like Section 3 */
+}
+.s2-item.align-center { justify-content: center; gap: 6px; }
+.s2-item.align-space-between { justify-content: space-between; }
+.s2-item.align-flex-start { justify-content: flex-start; gap: 6px; }
+.s2-item.align-flex-end { justify-content: flex-end; gap: 6px; }
+.s2-label { color: var(--primary-text-color, #ffffff); }
+.s2-val { color: var(--sec2-val-final-color, #ffffff); font-weight: 500; }
 
-          /* Section 3 */
-          .s3-container { font-size: calc(14.5px * var(--s3-scale, 1)); }
-          .s3-title { text-align: center; font-weight: bold; font-size: calc(16.8px * var(--s3-scale, 1)); margin-bottom: 8px; }
-          .cells-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; row-gap: 4px; }
-          .cell-row { display: flex; justify-content: center; gap: 6px; }
-          .cell-num { color: var(--primary-text-color, #ffffff); }
-          .cell-v { color: var(--primary-text-color, #ffffff); }
-          .cell-v.max-v { color: var(--max-cell-color, #2196f3) !important; font-weight: bold; }
-          .cell-v.min-v { color: var(--min-cell-color, #f44336) !important; font-weight: bold; }
-          .cell-r { color: var(--primary-text-color, #ffffff); }
+/* Section 3 */
+.s3-container { font-size: calc(14.4px * var(--s3-scale, 1)); }
+.s3-title { text-align: center; font-weight: bold; font-size: calc(16.8px * var(--s3-scale, 1)); margin-bottom: 8px; }
+.cells-grid { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  column-gap: 14px; 
+}
+.cells-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* Explicit flex gap matching Section 2 */
+}
+.cell-row { 
+  display: flex; 
+  justify-content: center; 
+  gap: 6px; 
+  line-height: normal; 
+}
+.cell-num { color: var(--primary-text-color, #ffffff); }
+.cell-v { color: var(--primary-text-color, #ffffff); }
+.cell-v.max-v { color: var(--max-cell-color, #2196f3) !important; font-weight: bold; }
+.cell-v.min-v { color: var(--min-cell-color, #f44336) !important; font-weight: bold; }
+.cell-r { color: var(--primary-text-color, #ffffff); }
 
           /* Section 4 */
           .s4-container { font-size: calc(14.5px * var(--s4-scale, 1)); }
