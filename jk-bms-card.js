@@ -53,12 +53,12 @@ class JkBmsCard extends HTMLElement {
             color: var(--primary-green-color, #2e7d32);
             margin-bottom: 4px;
           }
-          .s2-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 4px; }
+          .s2-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
           .s2-col { display: flex; flex-direction: column; gap: 4px; }
-          .s2-item { display: flex; }
+          .s2-item { display: flex; line-height: 1; margin: 0;}
           .s2-item.align-center { justify-content: center; gap: 4px; }
           .s2-item.align-space-between { justify-content: space-between; }
-          .s2-item.align-flex-start { justify-content: flex-start; gap: 4px; }
+          .s2-item.align-flex-start { justify-content: flex-start; gap: 4px; } 
           .s2-item.align-flex-end { justify-content: flex-end; gap: 4px; }
           .s2-label { color: var(--primary-text-color, #ffffff); }
           .s2-val { color: var(--sec2-val-final-color, #ffffff); font-weight: 500; }
