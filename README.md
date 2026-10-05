@@ -131,7 +131,7 @@ sec2_items:
 ### Example YAML Configuration
 
 ```yaml
-type: custom:jk-bms-card
+type: custom:jkbms-card
 prefix: jk_bms
 cell_count: 16
 show_section_1: true
