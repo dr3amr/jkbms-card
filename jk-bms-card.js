@@ -1,5 +1,6 @@
 /**
  * JK-BMS Custom Lovelace Card (v1.0.0)
+ * Added configurable gap reduction by half between neighboring sections (1 & 2, 2 & 3, 3 & 4).
  */
 
 function formatItemValue(val, decimals = 1, unit = '') {
@@ -43,8 +44,14 @@ class JkBmsCard extends HTMLElement {
             padding-left: 0;
             padding-right: 0;
           }
-          /* Custom reduced spacing between Section 2 and Section 3 when both are visible */
+          /* Reduced spacing between adjacent sections when both are visible */
+          .section.s1-compact-bottom {
+            margin-bottom: 5px !important;
+          }
           .section.s2-compact-bottom {
+            margin-bottom: 5px !important;
+          }
+          .section.s3-compact-bottom {
             margin-bottom: 5px !important;
           }
           .section:last-child { margin-bottom: 0; }
@@ -255,8 +262,9 @@ class JkBmsCard extends HTMLElement {
 
     // SECTION 1
     if (this._showS1) {
+      const compactS1 = (this._showS1 && this._showS2) ? 's1-compact-bottom' : '';
       html += `
-        <div class="section ${bgClass} s1-container">
+        <div class="section ${bgClass} ${compactS1} s1-container">
           <div class="s1-header">
             Time: <span class="s1-time clickable-val" id="s1-time" data-entity="${entTime}">--</span>
           </div>
@@ -295,7 +303,6 @@ class JkBmsCard extends HTMLElement {
         </div>
       ` : '';
 
-      // Check if both Section 2 and Section 3 are active to apply compact margin between them
       const compactS2 = (this._showS2 && this._showS3) ? 's2-compact-bottom' : '';
 
       html += `
@@ -333,8 +340,10 @@ class JkBmsCard extends HTMLElement {
         else rightCellsHtml += rowHtml;
       }
 
+      const compactS3 = (this._showS3 && this._showS4) ? 's3-compact-bottom' : '';
+
       html += `
-        <div class="section ${bgClass} s3-container">
+        <div class="section ${bgClass} ${compactS3} s3-container">
           ${this._showCellsTitle ? '<div class="s3-title">Cells</div>' : ''}
           <div class="cells-grid">
             <div>${leftCellsHtml}</div>
