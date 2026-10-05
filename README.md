@@ -10,8 +10,7 @@ A feature-rich, highly customizable Home Assistant Lovelace card designed to dis
 
 ## Preview
 
-![JK-BMS Card Preview](screenshot.png)
-*(Replace `screenshot.png` with an actual screenshot of your card running in Home Assistant)*
+<img width="387" height="593" alt="Screenshot_4" src="https://github.com/user-attachments/assets/186bbb24-485c-4562-9781-9051166a8ab4" />
 
 ---
 
