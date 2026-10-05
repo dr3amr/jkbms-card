@@ -1,6 +1,6 @@
 /**
  * JK-BMS Custom Lovelace Card (v1.0.0)
- * Updated with entity picker fix for Section 2 items and non-numeric / string / date support.
+ * Updated with entity selection feedback in the visual editor and version set to v1.0.0.
  */
 
 function formatItemValue(val, decimals = 1, unit = '') {
@@ -526,6 +526,7 @@ class JkBmsCardEditor extends HTMLElement {
       const decVal = item.decimals !== undefined ? item.decimals : 1;
       const isFirst = idx === 0;
       const isLast = idx === sec2Items.length - 1;
+      const hasOverrideEntity = Boolean(item.entity && item.entity.trim() !== '');
 
       itemsHtml += `
         <div style="border: 1px solid var(--divider-color, #444); border-radius: 6px; padding: 10px; margin-bottom: 10px; background: var(--card-background-color, #222);">
@@ -556,6 +557,16 @@ class JkBmsCardEditor extends HTMLElement {
               data-field="entity"
               allow-custom-entity>
             </ha-entity-picker>
+            ${
+              hasOverrideEntity 
+                ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding: 4px 8px; background: rgba(46, 125, 50, 0.2); border: 1px solid #2e7d32; border-radius: 4px; font-size: 11px; color: #81c784;">
+                     <span>✔ <b>Active Override:</b> ${item.entity}</span>
+                     <button class="btn-clear-entity" data-idx="${idx}" style="background: transparent; border: 1px solid #81c784; color: #81c784; border-radius: 3px; padding: 1px 6px; cursor: pointer; font-size: 10px;">Clear</button>
+                   </div>`
+                : `<div style="margin-top: 4px; font-size: 11px; color: #888; font-style: italic;">
+                     No override selected (using prefix + suffix)
+                   </div>`
+            }
           </div>
         </div>
       `;
@@ -736,6 +747,17 @@ class JkBmsCardEditor extends HTMLElement {
 
       picker.addEventListener('value-changed', handlePickerChange);
       picker.addEventListener('change', handlePickerChange);
+    });
+
+    // Clear Entity Override Listener
+    this.querySelectorAll('.btn-clear-entity').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const idx = parseInt(btn.getAttribute('data-idx'), 10);
+        const currentItems = [...sec2Items];
+        delete currentItems[idx].entity;
+        this._updateConfig('sec2_items', currentItems);
+      });
     });
 
     // Move Up / Down Event Listeners
