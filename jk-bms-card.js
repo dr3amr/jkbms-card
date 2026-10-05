@@ -1,5 +1,7 @@
 /**
  * JK-BMS Custom Lovelace Card (v1.0.0)
+ * Updated with direct pixel font sizing, Section 2 header size control,
+ * item reordering controls, and standard HTML color pickers.
  */
 
 function formatNumber(val, decimals = 1) {
@@ -37,18 +39,18 @@ class JkBmsCard extends HTMLElement {
           .section:last-child { margin-bottom: 0; }
 
           /* Section 1 */
-          .s1-container { font-size: calc(15.6px * var(--s1-scale, 1)); }
+          .s1-container { font-size: var(--s1-font-size, 15px); }
           .s1-header { text-align: center; margin-bottom: 8px; font-weight: 500; }
           .s1-time { color: var(--time-color, #2196f3); font-weight: bold; }
           .s1-status-row { display: flex; justify-content: space-around; }
           .s1-status-val { color: var(--primary-green-color, #2e7d32); font-weight: bold; }
 
           /* Section 2 */
-          .s2-container { font-size: calc(14.4px * var(--s2-scale, 1)); }
+          .s2-container { font-size: var(--s2-font-size, 14px); }
           .s2-main-vals {
             display: flex;
             justify-content: space-around;
-            font-size: calc(28.8px * var(--s2-scale, 1));
+            font-size: var(--s2-header-font-size, 28px);
             font-weight: bold;
             color: var(--primary-green-color, #2e7d32);
             margin-bottom: 4px;
@@ -64,8 +66,8 @@ class JkBmsCard extends HTMLElement {
           .s2-val { color: var(--sec2-val-final-color, #ffffff); font-weight: 500; }
 
           /* Section 3 */
-          .s3-container { font-size: calc(14.4px * var(--s3-scale, 1)); }
-          .s3-title { text-align: center; font-weight: bold; font-size: calc(16.8px * var(--s3-scale, 1)); margin-bottom: 8px; }
+          .s3-container { font-size: var(--s3-font-size, 14px); }
+          .s3-title { text-align: center; font-weight: bold; font-size: calc(var(--s3-font-size, 14px) * 1.15); margin-bottom: 8px; }
           .cells-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
           .cells-grid > div { display: flex; flex-direction: column; gap: 6px; }
           .cell-row { display: flex; justify-content: center; gap: 6px; line-height: normal; }
@@ -76,7 +78,7 @@ class JkBmsCard extends HTMLElement {
           .cell-r { color: var(--primary-text-color, #ffffff); }
 
           /* Section 4 */
-          .s4-container { font-size: calc(15.6px * var(--s4-scale, 1)); }
+          .s4-container { font-size: var(--s4-font-size, 15px); }
           .s4-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
           .s4-left { display: flex; align-items: center; gap: 10px; }
 
@@ -107,10 +109,11 @@ class JkBmsCard extends HTMLElement {
       use_mohm_res: false,
       sec2_align: "center",
       sec3_decimals: 1,
-      s1_scale: 1.0,
-      s2_scale: 1.0,
-      s3_scale: 1.0,
-      s4_scale: 1.0,
+      s1_font_size: 15,
+      s2_header_font_size: 28,
+      s2_font_size: 14,
+      s3_font_size: 14,
+      s4_font_size: 15,
       use_primary_color_sec2: false,
       remove_section_bg: false,
       section_bg_color: "#121212",
@@ -127,10 +130,12 @@ class JkBmsCard extends HTMLElement {
     
     this._sec3Decimals = this._config.sec3_decimals !== undefined ? parseInt(this._config.sec3_decimals, 10) : 1;
     this._useMohmRes = this._config.use_mohm_res === true;
-    this._s1Scale = this._config.s1_scale || 1.0;
-    this._s2Scale = this._config.s2_scale || 1.0;
-    this._s3Scale = this._config.s3_scale || 1.0;
-    this._s4Scale = this._config.s4_scale || 1.0;
+
+    this._s1FontSize = this._config.s1_font_size || 15;
+    this._s2HeaderFontSize = this._config.s2_header_font_size || 28;
+    this._s2FontSize = this._config.s2_font_size || 14;
+    this._s3FontSize = this._config.s3_font_size || 14;
+    this._s4FontSize = this._config.s4_font_size || 15;
 
     this._removeBg = this._config.remove_section_bg === true;
     this._secBgColor = this._config.section_bg_color || '#121212';
@@ -207,10 +212,12 @@ class JkBmsCard extends HTMLElement {
     this.style.setProperty('--max-cell-color', this._maxCellColor);
     this.style.setProperty('--min-cell-color', this._minCellColor);
     this.style.setProperty('--sec-bg-color', this._secBgColor);
-    this.style.setProperty('--s1-scale', this._s1Scale);
-    this.style.setProperty('--s2-scale', this._s2Scale);
-    this.style.setProperty('--s3-scale', this._s3Scale);
-    this.style.setProperty('--s4-scale', this._s4Scale);
+
+    this.style.setProperty('--s1-font-size', `${this._s1FontSize}px`);
+    this.style.setProperty('--s2-header-font-size', `${this._s2HeaderFontSize}px`);
+    this.style.setProperty('--s2-font-size', `${this._s2FontSize}px`);
+    this.style.setProperty('--s3-font-size', `${this._s3FontSize}px`);
+    this.style.setProperty('--s4-font-size', `${this._s4FontSize}px`);
 
     const valColorSec2 = this._usePrimaryColorSec2 ? 'var(--primary-green-color)' : 'var(--primary-text-color, #ffffff)';
     this.style.setProperty('--sec2-val-final-color', valColorSec2);
@@ -511,9 +518,20 @@ class JkBmsCardEditor extends HTMLElement {
     let itemsHtml = '';
     sec2Items.forEach((item, idx) => {
       const decVal = item.decimals !== undefined ? item.decimals : 1;
+      const isFirst = idx === 0;
+      const isLast = idx === sec2Items.length - 1;
+
       itemsHtml += `
         <div style="border: 1px solid var(--divider-color, #444); border-radius: 6px; padding: 10px; margin-bottom: 10px; background: var(--card-background-color, #222);">
-          <div style="display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 1fr auto; gap: 6px; margin-bottom: 8px; align-items: center;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: bold; color: #888;">Item #${idx + 1}</span>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn-move" data-idx="${idx}" data-dir="up" ${isFirst ? 'disabled style="opacity: 0.3; cursor: not-allowed;"' : 'style="background:#333; color:#fff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;"'}>▲</button>
+              <button class="btn-move" data-idx="${idx}" data-dir="down" ${isLast ? 'disabled style="opacity: 0.3; cursor: not-allowed;"' : 'style="background:#333; color:#fff; border:1px solid #555; border-radius:4px; padding:2px 8px; cursor:pointer;"'}>▼</button>
+              <button class="btn-del" data-idx="${idx}" style="background:#f44336; color:#fff; border:none; border-radius:4px; padding:2px 8px; cursor:pointer; margin-left: 6px;">X</button>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; align-items: center;">
             <input type="text" placeholder="Label" value="${item.label || ''}" data-idx="${idx}" data-field="label" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;">
             <input type="text" placeholder="Suffix" value="${item.entity_suffix || ''}" data-idx="${idx}" data-field="entity_suffix" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;">
             <input type="text" placeholder="Unit" value="${item.unit || ''}" data-idx="${idx}" data-field="unit" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;">
@@ -522,7 +540,6 @@ class JkBmsCardEditor extends HTMLElement {
               <option value="1" ${item.column == 1 ? 'selected' : ''}>Col 1</option>
               <option value="2" ${item.column == 2 ? 'selected' : ''}>Col 2</option>
             </select>
-            <button class="btn-del" data-idx="${idx}" style="background:#f44336; color:#fff; border:none; border-radius:4px; padding:6px 10px; cursor:pointer;">X</button>
           </div>
           <div>
             <ha-entity-picker 
@@ -546,6 +563,9 @@ class JkBmsCardEditor extends HTMLElement {
         .editor-row label { font-weight: 500; font-size: 13px; color: var(--primary-text-color, #fff); }
         .editor-row input[type="text"], .editor-row input[type="number"], .editor-row select {
           padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;
+        }
+        .editor-row input[type="color"] {
+          border: 1px solid #555; background: none; width: 50px; height: 32px; border-radius: 4px; cursor: pointer; padding: 0;
         }
         .editor-row-half { display: flex; gap: 10px; margin-bottom: 10px; }
         .editor-col { flex: 1; }
@@ -576,26 +596,30 @@ class JkBmsCardEditor extends HTMLElement {
           <label for="use_mohm_res">Convert Cell Resistance to mΩ with 0 decimals (e.g. 0.051 Ω → 51 mΩ)</label>
         </div>
 
-        <div class="sec-title">Section Scaling (Font Size)</div>
+        <div class="sec-title">Section Font Sizes (in Pixels)</div>
         <div class="editor-row-half">
           <div class="editor-col">
-            <label>Section 1 Scale:</label>
-            <input type="number" step="0.1" id="s1_scale" value="${this._config.s1_scale || 1.0}">
+            <label>Section 1 Font Size (px):</label>
+            <input type="number" id="s1_font_size" value="${this._config.s1_font_size || 15}">
           </div>
           <div class="editor-col">
-            <label>Section 2 Scale:</label>
-            <input type="number" step="0.1" id="s2_scale" value="${this._config.s2_scale || 1.0}">
+            <label>Section 2 Header V & A Size (px):</label>
+            <input type="number" id="s2_header_font_size" value="${this._config.s2_header_font_size || 28}">
           </div>
         </div>
         <div class="editor-row-half">
           <div class="editor-col">
-            <label>Section 3 Scale:</label>
-            <input type="number" step="0.1" id="s3_scale" value="${this._config.s3_scale || 1.0}">
+            <label>Section 2 Labels Font Size (px):</label>
+            <input type="number" id="s2_font_size" value="${this._config.s2_font_size || 14}">
           </div>
           <div class="editor-col">
-            <label>Section 4 Scale:</label>
-            <input type="number" step="0.1" id="s4_scale" value="${this._config.s4_scale || 1.0}">
+            <label>Section 3 Font Size (px):</label>
+            <input type="number" id="s3_font_size" value="${this._config.s3_font_size || 14}">
           </div>
+        </div>
+        <div class="editor-row">
+          <label>Section 4 Font Size (px):</label>
+          <input type="number" id="s4_font_size" value="${this._config.s4_font_size || 15}">
         </div>
 
         <div class="sec-title">Section Visibility</div>
@@ -642,25 +666,25 @@ class JkBmsCardEditor extends HTMLElement {
         </div>
         <div class="editor-row">
           <label>Section Background Color:</label>
-          <ha-color-picker id="section_bg_color" .value="${this._config.section_bg_color || '#121212'}"></ha-color-picker>
+          <input type="color" id="section_bg_color" value="${this._config.section_bg_color || '#121212'}">
         </div>
 
         <div class="sec-title">Color Customization</div>
         <div class="editor-row">
           <label>Primary Status Color:</label>
-          <ha-color-picker id="primary_green_color" .value="${this._config.primary_green_color || '#2e7d32'}"></ha-color-picker>
+          <input type="color" id="primary_green_color" value="${this._config.primary_green_color || '#2e7d32'}">
         </div>
         <div class="editor-row">
           <label>Uptime Header Color:</label>
-          <ha-color-picker id="time_color" .value="${this._config.time_color || '#2196f3'}"></ha-color-picker>
+          <input type="color" id="time_color" value="${this._config.time_color || '#2196f3'}">
         </div>
         <div class="editor-row">
           <label>Highest Cell Color:</label>
-          <ha-color-picker id="max_cell_color" .value="${this._config.max_cell_color || '#2196f3'}"></ha-color-picker>
+          <input type="color" id="max_cell_color" value="${this._config.max_cell_color || '#2196f3'}">
         </div>
         <div class="editor-row">
           <label>Lowest Cell Color:</label>
-          <ha-color-picker id="min_cell_color" .value="${this._config.min_cell_color || '#f44336'}"></ha-color-picker>
+          <input type="color" id="min_cell_color" value="${this._config.min_cell_color || '#f44336'}">
         </div>
 
         <div class="sec-title">Section 2 Items & Dynamic Configuration</div>
@@ -669,7 +693,7 @@ class JkBmsCardEditor extends HTMLElement {
       </div>
     `;
 
-    this.querySelectorAll('input[type="text"], input[type="number"], select#sec2_align').forEach(el => {
+    this.querySelectorAll('input[type="text"], input[type="number"], input[type="color"], select#sec2_align').forEach(el => {
       if (!el.getAttribute('data-field')) {
         el.addEventListener('change', this._valueChanged.bind(this));
       }
@@ -677,13 +701,6 @@ class JkBmsCardEditor extends HTMLElement {
 
     this.querySelectorAll('input[type="checkbox"]').forEach(el => {
       el.addEventListener('click', this._checkboxChanged.bind(this));
-    });
-
-    this.querySelectorAll('ha-color-picker').forEach(picker => {
-      picker.addEventListener('value-changed', (e) => {
-        if (!this._config || !picker.id) return;
-        this._updateConfig(picker.id, e.detail.value || picker.value);
-      });
     });
 
     this.querySelectorAll('#sec2-items-container input, #sec2-items-container select, #sec2-items-container ha-entity-picker').forEach(el => {
@@ -695,6 +712,27 @@ class JkBmsCardEditor extends HTMLElement {
           currentItems[idx][field] = e.target.value;
           this._updateConfig('sec2_items', currentItems);
         }
+      });
+    });
+
+    // Move Up / Down Event Listeners
+    this.querySelectorAll('.btn-move').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(btn.getAttribute('data-idx'), 10);
+        const dir = btn.getAttribute('data-dir');
+        const currentItems = [...sec2Items];
+
+        if (dir === 'up' && idx > 0) {
+          const temp = currentItems[idx];
+          currentItems[idx] = currentItems[idx - 1];
+          currentItems[idx - 1] = temp;
+        } else if (dir === 'down' && idx < currentItems.length - 1) {
+          const temp = currentItems[idx];
+          currentItems[idx] = currentItems[idx + 1];
+          currentItems[idx + 1] = temp;
+        }
+
+        this._updateConfig('sec2_items', currentItems);
       });
     });
 
