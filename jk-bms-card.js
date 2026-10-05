@@ -1,6 +1,6 @@
 /**
  * JK-BMS Custom Lovelace Card (v1.0.0)
- * Updated with entity selection feedback in the visual editor and version set to v1.0.0.
+ * Updated with toggle option for Section 2 Header (Voltage & Amperage).
  */
 
 function formatItemValue(val, decimals = 1, unit = '') {
@@ -111,6 +111,7 @@ class JkBmsCard extends HTMLElement {
       cell_count: 16,
       show_section_1: true,
       show_section_2: true,
+      show_section_2_header: true,
       show_section_3: true,
       show_section_4: true,
       show_cells_title: true,
@@ -158,6 +159,7 @@ class JkBmsCard extends HTMLElement {
 
     this._showS1 = this._config.show_section_1 !== false;
     this._showS2 = this._config.show_section_2 !== false;
+    this._showS2Header = this._config.show_section_2_header !== false;
     this._showS3 = this._config.show_section_3 !== false;
     this._showS4 = this._config.show_section_4 !== false;
     this._showCellsTitle = this._config.show_cells_title !== false;
@@ -281,12 +283,16 @@ class JkBmsCard extends HTMLElement {
         else col2Html += itemHtml;
       });
 
+      const headerHtml = this._showS2Header ? `
+        <div class="s2-main-vals">
+          <span class="clickable-val" id="s2-total-v" data-entity="${entTotalV}">-- V</span>
+          <span class="clickable-val" id="s2-current" data-entity="${entCurrent}">-- A</span>
+        </div>
+      ` : '';
+
       html += `
         <div class="section ${bgClass} s2-container">
-          <div class="s2-main-vals">
-            <span class="clickable-val" id="s2-total-v" data-entity="${entTotalV}">-- V</span>
-            <span class="clickable-val" id="s2-current" data-entity="${entCurrent}">-- A</span>
-          </div>
+          ${headerHtml}
           <div class="s2-columns">
             <div class="s2-col">${col1Html}</div>
             <div class="s2-col">${col2Html}</div>
@@ -405,14 +411,16 @@ class JkBmsCard extends HTMLElement {
 
     // SECTION 2 Updates
     if (this._showS2) {
-      const entTotalV = this.getEntity('total_voltage', this._config.entity_total_voltage, 'sensor');
-      const entCurrent = this.getEntity('current', this._config.entity_current, 'sensor');
+      if (this._showS2Header) {
+        const entTotalV = this.getEntity('total_voltage', this._config.entity_total_voltage, 'sensor');
+        const entCurrent = this.getEntity('current', this._config.entity_current, 'sensor');
 
-      const elTotalV = this.querySelector('#s2-total-v');
-      const elCurrent = this.querySelector('#s2-current');
+        const elTotalV = this.querySelector('#s2-total-v');
+        const elCurrent = this.querySelector('#s2-current');
 
-      if (elTotalV) elTotalV.textContent = `${formatItemValue(this.getVal(entTotalV), 1, 'V')}`;
-      if (elCurrent) elCurrent.textContent = `${formatItemValue(this.getVal(entCurrent), 1, 'A')}`;
+        if (elTotalV) elTotalV.textContent = `${formatItemValue(this.getVal(entTotalV), 1, 'V')}`;
+        if (elCurrent) elCurrent.textContent = `${formatItemValue(this.getVal(entCurrent), 1, 'A')}`;
+      }
 
       this._sec2Items.forEach((item, index) => {
         const entId = item.entity ? item.entity : this.getEntity(item.entity_suffix, null, 'sensor');
@@ -647,6 +655,10 @@ class JkBmsCardEditor extends HTMLElement {
         <div class="chk-row">
           <input type="checkbox" id="show_section_2" ${this._config.show_section_2 !== false ? 'checked' : ''}>
           <label for="show_section_2">Show Section 2 (Grid Data)</label>
+        </div>
+        <div class="chk-row" style="margin-left: 18px;">
+          <input type="checkbox" id="show_section_2_header" ${this._config.show_section_2_header !== false ? 'checked' : ''}>
+          <label for="show_section_2_header">Show Section 2 Header (Voltage & Amperage)</label>
         </div>
         <div class="chk-row">
           <input type="checkbox" id="show_section_3" ${this._config.show_section_3 !== false ? 'checked' : ''}>
