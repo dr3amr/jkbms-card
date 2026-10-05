@@ -86,7 +86,7 @@ Below is the complete list of available YAML options for the card:
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `type` | `string` | **Required** | Must be `custom:jk-bms-card`. |
+| `type` | `string` | **Required** | Must be `custom:jkbms-card`. |
 | `prefix` | `string` | `jk-bms` | Prefix applied to automatically construct entity IDs. |
 | `cell_count` | `number` | `16` | Number of battery cells to display in Section 3. |
 | `show_section_1` | `boolean` | `true` | Show or hide Section 1. |
