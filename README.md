@@ -38,18 +38,18 @@ A feature-rich, highly customizable Home Assistant Lovelace card designed to dis
 1. Ensure **HACS** is installed on your Home Assistant instance.
 2. Go to **HACS** > **Frontend**.
 3. Click the 3 dots in the top right corner and select **Custom repositories**.
-4. Add the repository URL: `https://github.com/dr3amr/jk-bms-card`
+4. Add the repository URL: `https://github.com/dr3amr/jkbms-card`
 5. Category: **Dashboard** (or **Plugin**).
 6. Click **Add**, then find **JK-BMS Lovelace Card** and click **Download**.
 7. Reload your browser page.
 
 ### Method 2: Manual Installation
 
-1. Download `jk-bms-card.js` from the latest release.
-2. Copy `jk-bms-card.js` into your Home Assistant `<config>/www/` folder.
+1. Download `jkbms-card.js` from the latest release.
+2. Copy `jkbms-card.js` into your Home Assistant `<config>/www/` folder.
 3. In Home Assistant, go to **Settings** > **Dashboards** > **3 dots (top right)** > **Resources**.
 4. Add Resource:
-   - **Url**: `/local/jk-bms-card.js`
+   - **Url**: `/local/jkbms-card.js`
    - **Resource Type**: `JavaScript Module`
 5. Refresh your browser.
 
