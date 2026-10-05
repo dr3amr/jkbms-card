@@ -1,4 +1,4 @@
-# JK-BMS Lovelace Card for Home Assistant (v1.0.0)
+# JK-BMS Lovelace Card for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/default)
 [![version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/)
