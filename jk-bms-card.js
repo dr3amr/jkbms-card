@@ -1,6 +1,5 @@
 /**
  * JK-BMS Custom Lovelace Card (v1.0.0)
- * Updated with toggle option for Section 2 Header (Voltage & Amperage).
  */
 
 function formatItemValue(val, decimals = 1, unit = '') {
@@ -43,6 +42,10 @@ class JkBmsCard extends HTMLElement {
             background: transparent !important;
             padding-left: 0;
             padding-right: 0;
+          }
+          /* Custom reduced spacing between Section 2 and Section 3 when both are visible */
+          .section.s2-compact-bottom {
+            margin-bottom: 5px !important;
           }
           .section:last-child { margin-bottom: 0; }
 
@@ -290,8 +293,11 @@ class JkBmsCard extends HTMLElement {
         </div>
       ` : '';
 
+      // Check if both Section 2 and Section 3 are active to apply compact margin between them
+      const compactS2 = (this._showS2 && this._showS3) ? 's2-compact-bottom' : '';
+
       html += `
-        <div class="section ${bgClass} s2-container">
+        <div class="section ${bgClass} ${compactS2} s2-container">
           ${headerHtml}
           <div class="s2-columns">
             <div class="s2-col">${col1Html}</div>
