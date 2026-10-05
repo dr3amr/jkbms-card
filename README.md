@@ -115,7 +115,10 @@ Below is the complete list of available YAML options for the card[cite: 1]:
 | `min_cell_color` | `string` | `#f44336` | Color highlight for lowest cell voltage[cite: 1]. |
 | `sec2_items` | `list` | *Default set* | Array of configurable metrics for Section 2[cite: 1]. |
 
-```type: custom:jk-bms-card
+## Example YAML Configuration
+
+```yaml
+type: custom:jk-bms-card
 prefix: jk_bms
 cell_count: 16
 show_section_1: true
@@ -154,6 +157,7 @@ sec2_items:
     decimals: 1
     column: 1
     entity: "sensor.custom_override_power" # Optional entity override
+```
 
 ## License
 
