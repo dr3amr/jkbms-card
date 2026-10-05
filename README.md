@@ -115,7 +115,21 @@ Below is the complete list of available YAML options for the card[cite: 1]:
 | `min_cell_color` | `string` | `#f44336` | Color highlight for lowest cell voltage[cite: 1]. |
 | `sec2_items` | `list` | *Default set* | Array of configurable metrics for Section 2[cite: 1]. |
 
-## Example YAML Configuration
+### Section 2 Item Structure
+
+Each item in the `sec2_items` array supports the following keys[cite: 1]:
+
+```yaml
+sec2_items:
+  - label: "Battery Power:"
+    entity_suffix: "power"
+    unit: "W"
+    decimals: 1
+    column: 1
+    entity: "sensor.custom_override_power" # Optional entity override
+```
+
+### Example YAML Configuration
 
 ```yaml
 type: custom:jk-bms-card
@@ -143,20 +157,6 @@ primary_font_color: "#2e7d32"
 time_font_color: "#2196f3"
 max_cell_color: "#2196f3"
 min_cell_color: "#f44336"
-```
-
-### Section 2 Item Structure
-
-Each item in the `sec2_items` array supports the following keys[cite: 1]:
-
-```yaml
-sec2_items:
-  - label: "Battery Power:"
-    entity_suffix: "power"
-    unit: "W"
-    decimals: 1
-    column: 1
-    entity: "sensor.custom_override_power" # Optional entity override
 ```
 
 ## License
