@@ -1,18 +1,26 @@
 /**
  * JK-BMS Custom Lovelace Card (v1.0.0)
- * Updated with direct pixel font sizing, Section 2 header size control,
- * item reordering controls, and standard HTML color pickers.
+ * Updated with entity picker fix for Section 2 items and non-numeric / string / date support.
  */
 
-function formatNumber(val, decimals = 1) {
+function formatItemValue(val, decimals = 1, unit = '') {
+  if (val === null || val === undefined || val === '') return '--';
+
   const num = parseFloat(val);
-  if (isNaN(num)) return val;
-  return num.toFixed(decimals);
+  // If value is non-numeric (e.g., text, date string, status label), display string directly
+  if (isNaN(num) || typeof val === 'boolean' || (typeof val === 'string' && val.trim() !== '' && isNaN(Number(val)))) {
+    return String(val);
+  }
+
+  // If numeric, format with configured decimals and append unit
+  const dec = decimals !== undefined && decimals !== '' ? parseInt(decimals, 10) : 1;
+  const formattedNum = num.toFixed(dec);
+  const unitStr = unit ? ` ${unit}` : '';
+  return `${formattedNum}${unitStr}`;
 }
 
 class JkBmsCard extends HTMLElement {
   set hass(hass) {
-    const oldHass = this._hass;
     this._hass = hass;
 
     if (!this.content) {
@@ -190,7 +198,7 @@ class JkBmsCard extends HTMLElement {
     const rawState = this.getVal(entityId, '--');
     if (rawState === 'on') return 'ON';
     if (rawState === 'off') return 'OFF';
-    return rawState.toUpperCase();
+    return rawState;
   }
 
   fireMoreInfo(entityId) {
@@ -260,7 +268,7 @@ class JkBmsCard extends HTMLElement {
       let col2Html = '';
 
       this._sec2Items.forEach((item, index) => {
-        const entId = item.entity || this.getEntity(item.entity_suffix, null, 'sensor');
+        const entId = item.entity ? item.entity : this.getEntity(item.entity_suffix, null, 'sensor');
         const itemHtml = `
           <div class="s2-item align-${this._sec2Align}">
             <span class="s2-label">${item.label}</span>
@@ -403,17 +411,15 @@ class JkBmsCard extends HTMLElement {
       const elTotalV = this.querySelector('#s2-total-v');
       const elCurrent = this.querySelector('#s2-current');
 
-      if (elTotalV) elTotalV.textContent = `${formatNumber(this.getVal(entTotalV), 1)} V`;
-      if (elCurrent) elCurrent.textContent = `${formatNumber(this.getVal(entCurrent), 1)} A`;
+      if (elTotalV) elTotalV.textContent = `${formatItemValue(this.getVal(entTotalV), 1, 'V')}`;
+      if (elCurrent) elCurrent.textContent = `${formatItemValue(this.getVal(entCurrent), 1, 'A')}`;
 
       this._sec2Items.forEach((item, index) => {
-        const entId = item.entity || this.getEntity(item.entity_suffix, null, 'sensor');
+        const entId = item.entity ? item.entity : this.getEntity(item.entity_suffix, null, 'sensor');
         const elItem = this.querySelector(`#s2-item-${index}`);
         if (elItem) {
-          const itemDecimals = item.decimals !== undefined && item.decimals !== '' ? parseInt(item.decimals, 10) : 1;
-          const formattedVal = formatNumber(this.getVal(entId), itemDecimals);
-          const unitStr = item.unit ? ` ${item.unit}` : '';
-          elItem.textContent = `${formattedVal}${unitStr}`;
+          const rawVal = this.getVal(entId);
+          elItem.textContent = formatItemValue(rawVal, item.decimals, item.unit);
         }
       });
     }
@@ -425,8 +431,6 @@ class JkBmsCard extends HTMLElement {
       const maxCellNum = parseInt(this.getVal(entMaxCellNum, '0'), 10);
       const minCellNum = parseInt(this.getVal(entMinCellNum, '0'), 10);
 
-      const resDecimals = this._useMohmRes ? 0 : this._sec3Decimals;
-
       for (let i = 1; i <= this._cellCount; i++) {
         const entCellV = this.getEntity(`cell_voltage_${i}`, this._config[`entity_cell_voltage_${i}`], 'sensor');
         const entCellR = this.getEntity(`cell_resistance_${i}`, this._config[`entity_cell_resistance_${i}`], 'sensor');
@@ -435,21 +439,23 @@ class JkBmsCard extends HTMLElement {
         const elR = this.querySelector(`#cell-r-${i}`);
 
         if (elV) {
-          elV.textContent = `${formatNumber(this.getVal(entCellV, '0.0'), this._sec3Decimals)} V`;
+          elV.textContent = formatItemValue(this.getVal(entCellV, '0.0'), this._sec3Decimals, 'V');
           elV.classList.remove('max-v', 'min-v');
           if (i === maxCellNum) elV.classList.add('max-v');
           else if (i === minCellNum) elV.classList.add('min-v');
         }
 
         if (elR) {
-          const rawR = parseFloat(this.getVal(entCellR, '0.0'));
+          const rawRVal = this.getVal(entCellR, '0.0');
+          const rawR = parseFloat(rawRVal);
+
           if (isNaN(rawR)) {
-            elR.textContent = `-- ${this._useMohmRes ? 'mΩ' : 'Ω'}`;
+            elR.textContent = `${rawRVal}`;
           } else if (this._useMohmRes) {
             const mOhmVal = rawR < 1 ? rawR * 1000 : rawR;
-            elR.textContent = `${formatNumber(mOhmVal, 0)} mΩ`;
+            elR.textContent = `${mOhmVal.toFixed(0)} mΩ`;
           } else {
-            elR.textContent = `${formatNumber(rawR, resDecimals)} Ω`;
+            elR.textContent = `${rawR.toFixed(this._sec3Decimals)} Ω`;
           }
         }
       }
@@ -535,7 +541,7 @@ class JkBmsCardEditor extends HTMLElement {
             <input type="text" placeholder="Label" value="${item.label || ''}" data-idx="${idx}" data-field="label" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;">
             <input type="text" placeholder="Suffix" value="${item.entity_suffix || ''}" data-idx="${idx}" data-field="entity_suffix" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;">
             <input type="text" placeholder="Unit" value="${item.unit || ''}" data-idx="${idx}" data-field="unit" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;">
-            <input type="number" placeholder="Dec" value="${decVal}" data-idx="${idx}" data-field="decimals" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;" title="Decimals">
+            <input type="number" placeholder="Dec" value="${decVal}" data-idx="${idx}" data-field="decimals" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;" title="Decimals (ignored for text/dates)">
             <select data-idx="${idx}" data-field="column" style="padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: #fff; width: 100%; box-sizing: border-box;">
               <option value="1" ${item.column == 1 ? 'selected' : ''}>Col 1</option>
               <option value="2" ${item.column == 2 ? 'selected' : ''}>Col 2</option>
@@ -703,7 +709,8 @@ class JkBmsCardEditor extends HTMLElement {
       el.addEventListener('click', this._checkboxChanged.bind(this));
     });
 
-    this.querySelectorAll('#sec2-items-container input, #sec2-items-container select, #sec2-items-container ha-entity-picker').forEach(el => {
+    // Item Input Fields Listener
+    this.querySelectorAll('#sec2-items-container input, #sec2-items-container select').forEach(el => {
       el.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-idx');
         const field = e.target.getAttribute('data-field');
@@ -713,6 +720,22 @@ class JkBmsCardEditor extends HTMLElement {
           this._updateConfig('sec2_items', currentItems);
         }
       });
+    });
+
+    // Entity Picker Event Listener Fix (value-changed / change)
+    this.querySelectorAll('#sec2-items-container ha-entity-picker').forEach(picker => {
+      const handlePickerChange = (e) => {
+        const idx = picker.getAttribute('data-idx');
+        if (idx !== null) {
+          const newEntity = e.detail?.value !== undefined ? e.detail.value : picker.value;
+          const currentItems = [...sec2Items];
+          currentItems[idx].entity = newEntity;
+          this._updateConfig('sec2_items', currentItems);
+        }
+      };
+
+      picker.addEventListener('value-changed', handlePickerChange);
+      picker.addEventListener('change', handlePickerChange);
     });
 
     // Move Up / Down Event Listeners
