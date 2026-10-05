@@ -120,6 +120,7 @@ class JkBmsCard extends HTMLElement {
       show_cells_title: true,
       use_mohm_res: false,
       sec2_align: "center",
+      sec2_header_decimals: 1,
       sec3_decimals: 1,
       s1_font_size: 15,
       s2_header_font_size: 28,
@@ -140,6 +141,7 @@ class JkBmsCard extends HTMLElement {
     this._config = Object.assign({}, config);
     this._prefix = this._config.prefix || 'jk-bms';
     
+    this._sec2HeaderDecimals = this._config.sec2_header_decimals !== undefined ? parseInt(this._config.sec2_header_decimals, 10) : 1;
     this._sec3Decimals = this._config.sec3_decimals !== undefined ? parseInt(this._config.sec3_decimals, 10) : 1;
     this._useMohmRes = this._config.use_mohm_res === true;
 
@@ -424,8 +426,8 @@ class JkBmsCard extends HTMLElement {
         const elTotalV = this.querySelector('#s2-total-v');
         const elCurrent = this.querySelector('#s2-current');
 
-        if (elTotalV) elTotalV.textContent = `${formatItemValue(this.getVal(entTotalV), 1, 'V')}`;
-        if (elCurrent) elCurrent.textContent = `${formatItemValue(this.getVal(entCurrent), 1, 'A')}`;
+        if (elTotalV) elTotalV.textContent = `${formatItemValue(this.getVal(entTotalV), this._sec2HeaderDecimals, 'V')}`;
+        if (elCurrent) elCurrent.textContent = `${formatItemValue(this.getVal(entCurrent), this._sec2HeaderDecimals, 'A')}`;
       }
 
       this._sec2Items.forEach((item, index) => {
@@ -619,6 +621,10 @@ class JkBmsCardEditor extends HTMLElement {
 
         <div class="sec-title">Formatting & Units</div>
         <div class="editor-row">
+          <label>Section 2 Header Decimals (V & A):</label>
+          <input type="number" id="sec2_header_decimals" value="${this._config.sec2_header_decimals !== undefined ? this._config.sec2_header_decimals : 1}">
+        </div>
+        <div class="editor-row">
           <label>Section 3 Cell Voltage Decimals:</label>
           <input type="number" id="sec3_decimals" value="${this._config.sec3_decimals !== undefined ? this._config.sec3_decimals : 1}">
         </div>
@@ -670,183 +676,205 @@ class JkBmsCardEditor extends HTMLElement {
           <input type="checkbox" id="show_section_3" ${this._config.show_section_3 !== false ? 'checked' : ''}>
           <label for="show_section_3">Show Section 3 (Cell Voltages)</label>
         </div>
+        <div class="chk-row" style="margin-left: 18px;">
+          <input type="checkbox" id="show_cells_title" ${this._config.show_cells_title !== false ? 'checked' : ''}>
+          <label for="show_cells_title">Show Section 3 Header ("Cells")</label>
+        </div>
         <div class="chk-row">
           <input type="checkbox" id="show_section_4" ${this._config.show_section_4 !== false ? 'checked' : ''}>
           <label for="show_section_4">Show Section 4 (Switches)</label>
         </div>
-        <div class="chk-row">
-          <input type="checkbox" id="show_cells_title" ${this._config.show_cells_title !== false ? 'checked' : ''}>
-          <label for="show_cells_title">Show 'Cells' Title in Section 3</label>
-        </div>
 
-        <div class="sec-title">Section 2 Layout & Text Alignment</div>
-        <div class="editor-row">
-          <label>Sec 2 Text Alignment:</label>
-          <select id="sec2_align">
-            <option value="center" ${alignVal === 'center' ? 'selected' : ''}>Centered (Default)</option>
-            <option value="space-between" ${alignVal === 'space-between' ? 'selected' : ''}>Spread (Left & Right Ends)</option>
-            <option value="flex-start" ${alignVal === 'flex-start' ? 'selected' : ''}>Align Left</option>
-            <option value="flex-end" ${alignVal === 'flex-end' ? 'selected' : ''}>Align Right</option>
-          </select>
-        </div>
+        <div class="sec-title">Styling & Alignment</div>
         <div class="chk-row">
           <input type="checkbox" id="use_primary_color_sec2" ${this._config.use_primary_color_sec2 === true ? 'checked' : ''}>
-          <label for="use_primary_color_sec2">Use Primary Status Color for Section 2 Values</label>
+          <label for="use_primary_color_sec2">Use Primary Green Color for Section 2 Values</label>
         </div>
-
-        <div class="sec-title">Background Customization</div>
         <div class="chk-row">
           <input type="checkbox" id="remove_section_bg" ${this._config.remove_section_bg === true ? 'checked' : ''}>
-          <label for="remove_section_bg">Remove Section Backgrounds (Transparent)</label>
+          <label for="remove_section_bg">Remove Dark Section Backgrounds (Transparent)</label>
         </div>
         <div class="editor-row">
           <label>Section Background Color:</label>
           <input type="color" id="section_bg_color" value="${this._config.section_bg_color || '#121212'}">
         </div>
-
-        <div class="sec-title">Color Customization</div>
         <div class="editor-row">
-          <label>Primary Status Color:</label>
+          <label>Primary Green Color:</label>
           <input type="color" id="primary_green_color" value="${this._config.primary_green_color || '#2e7d32'}">
         </div>
         <div class="editor-row">
-          <label>Uptime Header Color:</label>
+          <label>Time Accent Color:</label>
           <input type="color" id="time_color" value="${this._config.time_color || '#2196f3'}">
         </div>
         <div class="editor-row">
-          <label>Highest Cell Color:</label>
+          <label>Max Cell Voltage Color:</label>
           <input type="color" id="max_cell_color" value="${this._config.max_cell_color || '#2196f3'}">
         </div>
         <div class="editor-row">
-          <label>Lowest Cell Color:</label>
+          <label>Min Cell Voltage Color:</label>
           <input type="color" id="min_cell_color" value="${this._config.min_cell_color || '#f44336'}">
         </div>
+        <div class="editor-row">
+          <label>Section 2 Data Alignment:</label>
+          <select id="sec2_align">
+            <option value="center" ${alignVal === 'center' ? 'selected' : ''}>Center</option>
+            <option value="space-between" ${alignVal === 'space-between' ? 'selected' : ''}>Space Between</option>
+            <option value="flex-start" ${alignVal === 'flex-start' ? 'selected' : ''}>Left (Flex Start)</option>
+            <option value="flex-end" ${alignVal === 'flex-end' ? 'selected' : ''}>Right (Flex End)</option>
+          </select>
+        </div>
 
-        <div class="sec-title">Section 2 Items & Dynamic Configuration</div>
-        <div id="sec2-items-container">${itemsHtml}</div>
-        <button id="btn-add-item" style="background:var(--primary-color, #2e7d32); color:#fff; border:none; border-radius:4px; padding:8px 16px; cursor:pointer; margin-top:6px; font-weight:bold;">+ Add Item</button>
+        <div class="sec-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>Section 2 Display Items</span>
+          <button id="btn-add-item" style="background: var(--primary-color, #03a9f4); color: #fff; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 12px; font-weight: bold;">+ Add Item</button>
+        </div>
+        <div id="sec2-items-container">
+          ${itemsHtml}
+        </div>
       </div>
     `;
 
-    this.querySelectorAll('input[type="text"], input[type="number"], input[type="color"], select#sec2_align').forEach(el => {
-      if (!el.getAttribute('data-field')) {
-        el.addEventListener('change', this._valueChanged.bind(this));
+    this.updateEntityPickers();
+    this.attachEventListeners();
+  }
+
+  attachEventListeners() {
+    // Inputs & Selects Direct Binding
+    const inputs = [
+      'prefix', 'cell_count', 'sec2_header_decimals', 'sec3_decimals', 's1_font_size',
+      's2_header_font_size', 's2_font_size', 's3_font_size', 's4_font_size',
+      'section_bg_color', 'primary_green_color', 'time_color',
+      'max_cell_color', 'min_cell_color', 'sec2_align'
+    ];
+
+    inputs.forEach(id => {
+      const el = this.querySelector(`#${id}`);
+      if (el) {
+        el.addEventListener('change', (e) => this._valueChanged(id, e.target.value));
       }
     });
 
-    this.querySelectorAll('input[type="checkbox"]').forEach(el => {
-      el.addEventListener('click', this._checkboxChanged.bind(this));
+    // Checkboxes Direct Binding
+    const checkboxes = [
+      'show_section_1', 'show_section_2', 'show_section_2_header',
+      'show_section_3', 'show_section_4', 'show_cells_title',
+      'use_mohm_res', 'use_primary_color_sec2', 'remove_section_bg'
+    ];
+
+    checkboxes.forEach(id => {
+      const el = this.querySelector(`#${id}`);
+      if (el) {
+        el.addEventListener('change', (e) => this._valueChanged(id, e.target.checked));
+      }
     });
 
-    // Item Input Fields Listener
-    this.querySelectorAll('#sec2-items-container input, #sec2-items-container select').forEach(el => {
-      el.addEventListener('change', (e) => {
-        const idx = e.target.getAttribute('data-idx');
-        const field = e.target.getAttribute('data-field');
-        if (idx !== null && field) {
-          const currentItems = [...sec2Items];
-          currentItems[idx][field] = e.target.value;
-          this._updateConfig('sec2_items', currentItems);
-        }
-      });
-    });
-
-    // Entity Picker Event Listener Fix (value-changed / change)
-    this.querySelectorAll('#sec2-items-container ha-entity-picker').forEach(picker => {
-      const handlePickerChange = (e) => {
-        const idx = picker.getAttribute('data-idx');
-        if (idx !== null) {
-          const newEntity = e.detail?.value !== undefined ? e.detail.value : picker.value;
-          const currentItems = [...sec2Items];
-          currentItems[idx].entity = newEntity;
-          this._updateConfig('sec2_items', currentItems);
-        }
-      };
-
-      picker.addEventListener('value-changed', handlePickerChange);
-      picker.addEventListener('change', handlePickerChange);
-    });
-
-    // Clear Entity Override Listener
-    this.querySelectorAll('.btn-clear-entity').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const idx = parseInt(btn.getAttribute('data-idx'), 10);
-        const currentItems = [...sec2Items];
-        delete currentItems[idx].entity;
-        this._updateConfig('sec2_items', currentItems);
-      });
-    });
-
-    // Move Up / Down Event Listeners
+    // Item Move/Delete/Clear Events
     this.querySelectorAll('.btn-move').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const idx = parseInt(btn.getAttribute('data-idx'), 10);
-        const dir = btn.getAttribute('data-dir');
-        const currentItems = [...sec2Items];
-
-        if (dir === 'up' && idx > 0) {
-          const temp = currentItems[idx];
-          currentItems[idx] = currentItems[idx - 1];
-          currentItems[idx - 1] = temp;
-        } else if (dir === 'down' && idx < currentItems.length - 1) {
-          const temp = currentItems[idx];
-          currentItems[idx] = currentItems[idx + 1];
-          currentItems[idx + 1] = temp;
-        }
-
-        this._updateConfig('sec2_items', currentItems);
+        const idx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
+        const dir = e.currentTarget.getAttribute('data-dir');
+        this._moveItem(idx, dir);
       });
     });
 
     this.querySelectorAll('.btn-del').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const idx = parseInt(e.target.getAttribute('data-idx'), 10);
-        const currentItems = [...sec2Items];
-        currentItems.splice(idx, 1);
-        this._updateConfig('sec2_items', currentItems);
+        const idx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
+        this._deleteItem(idx);
+      });
+    });
+
+    this.querySelectorAll('.btn-clear-entity').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
+        this._updateItemField(idx, 'entity', '');
       });
     });
 
     const btnAdd = this.querySelector('#btn-add-item');
     if (btnAdd) {
-      btnAdd.addEventListener('click', () => {
-        const currentItems = [...sec2Items];
-        currentItems.push({ label: 'New Label:', entity_suffix: '', unit: '', decimals: 1, column: 1 });
-        this._updateConfig('sec2_items', currentItems);
-      });
+      btnAdd.addEventListener('click', () => this._addItem());
     }
 
-    this.updateEntityPickers();
+    // Dynamic Item Field Changes
+    this.querySelectorAll('#sec2-items-container input, #sec2-items-container select, #sec2-items-container ha-entity-picker').forEach(input => {
+      input.addEventListener('change', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+        const field = e.target.getAttribute('data-field');
+        if (!isNaN(idx) && field) {
+          const val = e.target.value !== undefined ? e.target.value : e.detail?.value;
+          this._updateItemField(idx, field, val);
+        }
+      });
+    });
   }
 
-  _valueChanged(e) {
-    if (!this._config || !e.target.id) return;
-    this._updateConfig(e.target.id, e.target.value);
+  _valueChanged(key, value) {
+    if (!this._config) return;
+    const newConfig = Object.assign({}, this._config, { [key]: value });
+    this._config = newConfig;
+    this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: newConfig }, bubbles: true, composed: true }));
   }
 
-  _checkboxChanged(e) {
-    if (!this._config || !e.target.id) return;
-    this._updateConfig(e.target.id, e.target.checked);
+  _getSec2Items() {
+    return this._config.sec2_items ? [...this._config.sec2_items] : [
+      { label: 'Battery Power:', entity_suffix: 'power', unit: 'W', decimals: 1, column: 1 },
+      { label: 'Remain Battery:', entity_suffix: 'state_of_charge', unit: '%', decimals: 1, column: 2 },
+      { label: 'Battery Capacity:', entity_suffix: 'full_charge_capacity', unit: 'Ah', decimals: 1, column: 1 },
+      { label: 'Remain Capacity:', entity_suffix: 'capacity_remaining', unit: 'Ah', decimals: 1, column: 2 },
+      { label: 'Cycle Capacity:', entity_suffix: 'total_charging_cycle_capacity', unit: 'Ah', decimals: 1, column: 1 },
+      { label: 'Cycle Count:', entity_suffix: 'charging_cycles', unit: '', decimals: 0, column: 2 },
+      { label: 'Ave. Cell Vol.:', entity_suffix: 'average_cell_voltage', unit: 'V', decimals: 3, column: 1 },
+      { label: 'Delta Cell Vol.:', entity_suffix: 'delta_cell_voltage', unit: 'V', decimals: 3, column: 2 },
+      { label: 'Balance Cur.:', entity_suffix: 'balancing_current', unit: 'A', decimals: 2, column: 1 },
+      { label: 'MOS Temp.:', entity_suffix: 'mosfet_temperature', unit: '°C', decimals: 1, column: 2 },
+      { label: 'Battery T1:', entity_suffix: 'temperature_sensor_1', unit: '°C', decimals: 1, column: 1 },
+      { label: 'Battery T2:', entity_suffix: 'temperature_sensor_2', unit: '°C', decimals: 1, column: 2 }
+    ];
   }
 
-  _updateConfig(key, value) {
-    this._config = {
-      ...this._config,
-      [key]: value
-    };
-    const event = new Event("config-changed", { bubbles: true, composed: true });
-    event.detail = { config: this._config };
-    this.dispatchEvent(event);
+  _updateItemField(idx, field, val) {
+    const items = this._getSec2Items();
+    if (items[idx]) {
+      items[idx][field] = field === 'decimals' || field === 'column' ? parseInt(val, 10) : val;
+      this._valueChanged('sec2_items', items);
+      this.render();
+    }
+  }
+
+  _addItem() {
+    const items = this._getSec2Items();
+    items.push({ label: 'New Item:', entity_suffix: '', unit: '', decimals: 1, column: 1 });
+    this._valueChanged('sec2_items', items);
+    this.render();
+  }
+
+  _deleteItem(idx) {
+    const items = this._getSec2Items();
+    items.splice(idx, 1);
+    this._valueChanged('sec2_items', items);
+    this.render();
+  }
+
+  _moveItem(idx, dir) {
+    const items = this._getSec2Items();
+    const targetIdx = dir === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx >= 0 && targetIdx < items.length) {
+      const temp = items[idx];
+      items[idx] = items[targetIdx];
+      items[targetIdx] = temp;
+      this._valueChanged('sec2_items', items);
+      this.render();
+    }
   }
 }
 
-customElements.define('jk-bms-card', JkBmsCard);
-customElements.define('jk-bms-card-editor', JkBmsCardEditor);
+customElements.define("jk-bms-card", JkBmsCard);
+customElements.define("jk-bms-card-editor", JkBmsCardEditor);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "jk-bms-card",
-  name: "JK-BMS Android App UI Card",
-  description: "A custom card replicating the official JK-BMS Android application interface with visual UI editing."
+  name: "JK-BMS Custom Card",
+  description: "A custom Lovelace card designed to display detailed status for JK-BMS devices."
 });
