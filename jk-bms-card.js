@@ -1,6 +1,5 @@
 /**
  * JK-BMS Custom Lovelace Card (v1.0.0)
- * Added configurable gap reduction by half between neighboring sections (1 & 2, 2 & 3, 3 & 4).
  */
 
 function formatItemValue(val, decimals = 1, unit = '') {
@@ -59,9 +58,9 @@ class JkBmsCard extends HTMLElement {
           /* Section 1 */
           .s1-container { font-size: var(--s1-font-size, 15px); }
           .s1-header { text-align: center; margin-bottom: 8px; font-weight: 500; }
-          .s1-time { color: var(--time-color, #2196f3); font-weight: bold; }
+          .s1-time { color: var(--time-font-color, #2196f3); font-weight: bold; }
           .s1-status-row { display: flex; justify-content: space-around; }
-          .s1-status-val { color: var(--primary-green-color, #2e7d32); font-weight: bold; }
+          .s1-status-val { color: var(--primary-font-color, #2e7d32); font-weight: bold; }
 
           /* Section 2 */
           .s2-container { font-size: var(--s2-font-size, 14px); }
@@ -70,7 +69,7 @@ class JkBmsCard extends HTMLElement {
             justify-content: space-around;
             font-size: var(--s2-header-font-size, 28px);
             font-weight: bold;
-            color: var(--primary-green-color, #2e7d32);
+            color: var(--primary-font-color, #2e7d32);
             margin-bottom: 4px;
           }
           .s2-columns { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
@@ -88,7 +87,11 @@ class JkBmsCard extends HTMLElement {
           .s3-title { text-align: center; font-weight: bold; font-size: calc(var(--s3-font-size, 14px) * 1.15); margin-bottom: 8px; }
           .cells-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
           .cells-grid > div { display: flex; flex-direction: column; gap: 6px; }
-          .cell-row { display: flex; justify-content: center; gap: 6px; line-height: normal; }
+          .cell-row { display: flex; line-height: normal; }
+          .cell-row.align-center { justify-content: center; gap: 6px; }
+          .cell-row.align-space-between { justify-content: space-between; }
+          .cell-row.align-flex-start { justify-content: flex-start; gap: 6px; }
+          .cell-row.align-flex-end { justify-content: flex-end; gap: 6px; }
           .cell-num { color: var(--primary-text-color, #ffffff); }
           .cell-v { color: var(--primary-text-color, #ffffff); }
           .cell-v.max-v { color: var(--max-cell-color, #2196f3) !important; font-weight: bold; }
@@ -127,6 +130,7 @@ class JkBmsCard extends HTMLElement {
       show_cells_title: true,
       use_mohm_res: false,
       sec2_align: "center",
+      sec3_align: "center",
       sec2_header_decimals: 1,
       sec3_decimals: 1,
       s1_font_size: 15,
@@ -137,8 +141,8 @@ class JkBmsCard extends HTMLElement {
       use_primary_color_sec2: false,
       remove_section_bg: false,
       section_bg_color: "#121212",
-      primary_green_color: "#2e7d32",
-      time_color: "#2196f3",
+      primary_font_color: "#2e7d32",
+      time_font_color: "#2196f3",
       max_cell_color: "#2196f3",
       min_cell_color: "#f44336"
     };
@@ -162,12 +166,13 @@ class JkBmsCard extends HTMLElement {
     this._secBgColor = this._config.section_bg_color || '#121212';
     this._usePrimaryColorSec2 = this._config.use_primary_color_sec2 === true;
 
-    this._greenColor = this._config.primary_green_color || '#2e7d32';
-    this._timeColor = this._config.time_color || '#2196f3';
+    this._primaryFontColor = this._config.primary_font_color || '#2e7d32';
+    this._timeFontColor = this._config.time_font_color || '#2196f3';
     this._maxCellColor = this._config.max_cell_color || '#2196f3';
     this._minCellColor = this._config.min_cell_color || '#f44336';
 
     this._sec2Align = this._config.sec2_align || 'center';
+    this._sec3Align = this._config.sec3_align || 'center';
 
     this._showS1 = this._config.show_section_1 !== false;
     this._showS2 = this._config.show_section_2 !== false;
@@ -229,8 +234,8 @@ class JkBmsCard extends HTMLElement {
   }
 
   buildDOM() {
-    this.style.setProperty('--primary-green-color', this._greenColor);
-    this.style.setProperty('--time-color', this._timeColor);
+    this.style.setProperty('--primary-font-color', this._primaryFontColor);
+    this.style.setProperty('--time-font-color', this._timeFontColor);
     this.style.setProperty('--max-cell-color', this._maxCellColor);
     this.style.setProperty('--min-cell-color', this._minCellColor);
     this.style.setProperty('--sec-bg-color', this._secBgColor);
@@ -241,7 +246,7 @@ class JkBmsCard extends HTMLElement {
     this.style.setProperty('--s3-font-size', `${this._s3FontSize}px`);
     this.style.setProperty('--s4-font-size', `${this._s4FontSize}px`);
 
-    const valColorSec2 = this._usePrimaryColorSec2 ? 'var(--primary-green-color)' : 'var(--primary-text-color, #ffffff)';
+    const valColorSec2 = this._usePrimaryColorSec2 ? 'var(--primary-font-color)' : 'var(--primary-text-color, #ffffff)';
     this.style.setProperty('--sec2-val-final-color', valColorSec2);
 
     const bgClass = this._removeBg ? 'transparent-bg' : '';
@@ -328,7 +333,7 @@ class JkBmsCard extends HTMLElement {
         const entCellR = this.getEntity(`cell_resistance_${i}`, this._config[`entity_cell_resistance_${i}`], 'sensor');
 
         const rowHtml = `
-          <div class="cell-row">
+          <div class="cell-row align-${this._sec3Align}">
             <span class="cell-num">${cellIdStr}.</span>
             <span class="cell-v clickable-val" id="cell-v-${i}" data-entity="${entCellV}">-- V</span>
             <span style="color: var(--primary-text-color, #ffffff);">/</span>
@@ -597,7 +602,8 @@ class JkBmsCardEditor extends HTMLElement {
       `;
     });
 
-    const alignVal = this._config.sec2_align || 'center';
+    const alignValSec2 = this._config.sec2_align || 'center';
+    const alignValSec3 = this._config.sec3_align || 'center';
 
     this.innerHTML = `
       <style>
@@ -697,7 +703,7 @@ class JkBmsCardEditor extends HTMLElement {
         <div class="sec-title">Styling & Alignment</div>
         <div class="chk-row">
           <input type="checkbox" id="use_primary_color_sec2" ${this._config.use_primary_color_sec2 === true ? 'checked' : ''}>
-          <label for="use_primary_color_sec2">Use Primary Green Color for Section 2 Values</label>
+          <label for="use_primary_color_sec2">Use Primary Font Color for Section 2 Values</label>
         </div>
         <div class="chk-row">
           <input type="checkbox" id="remove_section_bg" ${this._config.remove_section_bg === true ? 'checked' : ''}>
@@ -708,12 +714,12 @@ class JkBmsCardEditor extends HTMLElement {
           <input type="color" id="section_bg_color" value="${this._config.section_bg_color || '#121212'}">
         </div>
         <div class="editor-row">
-          <label>Primary Green Color:</label>
-          <input type="color" id="primary_green_color" value="${this._config.primary_green_color || '#2e7d32'}">
+          <label>Primary Font Color:</label>
+          <input type="color" id="primary_font_color" value="${this._config.primary_font_color || '#2e7d32'}">
         </div>
         <div class="editor-row">
-          <label>Time Accent Color:</label>
-          <input type="color" id="time_color" value="${this._config.time_color || '#2196f3'}">
+          <label>Time Font Color:</label>
+          <input type="color" id="time_font_color" value="${this._config.time_font_color || '#2196f3'}">
         </div>
         <div class="editor-row">
           <label>Max Cell Voltage Color:</label>
@@ -726,10 +732,19 @@ class JkBmsCardEditor extends HTMLElement {
         <div class="editor-row">
           <label>Section 2 Data Alignment:</label>
           <select id="sec2_align">
-            <option value="center" ${alignVal === 'center' ? 'selected' : ''}>Center</option>
-            <option value="space-between" ${alignVal === 'space-between' ? 'selected' : ''}>Space Between</option>
-            <option value="flex-start" ${alignVal === 'flex-start' ? 'selected' : ''}>Left (Flex Start)</option>
-            <option value="flex-end" ${alignVal === 'flex-end' ? 'selected' : ''}>Right (Flex End)</option>
+            <option value="center" ${alignValSec2 === 'center' ? 'selected' : ''}>Center</option>
+            <option value="space-between" ${alignValSec2 === 'space-between' ? 'selected' : ''}>Space Between</option>
+            <option value="flex-start" ${alignValSec2 === 'flex-start' ? 'selected' : ''}>Left (Flex Start)</option>
+            <option value="flex-end" ${alignValSec2 === 'flex-end' ? 'selected' : ''}>Right (Flex End)</option>
+          </select>
+        </div>
+        <div class="editor-row">
+          <label>Section 3 Data Alignment:</label>
+          <select id="sec3_align">
+            <option value="center" ${alignValSec3 === 'center' ? 'selected' : ''}>Center</option>
+            <option value="space-between" ${alignValSec3 === 'space-between' ? 'selected' : ''}>Space Between</option>
+            <option value="flex-start" ${alignValSec3 === 'flex-start' ? 'selected' : ''}>Left (Flex Start)</option>
+            <option value="flex-end" ${alignValSec3 === 'flex-end' ? 'selected' : ''}>Right (Flex End)</option>
           </select>
         </div>
 
@@ -752,8 +767,8 @@ class JkBmsCardEditor extends HTMLElement {
     const inputs = [
       'prefix', 'cell_count', 'sec2_header_decimals', 'sec3_decimals', 's1_font_size',
       's2_header_font_size', 's2_font_size', 's3_font_size', 's4_font_size',
-      'section_bg_color', 'primary_green_color', 'time_color',
-      'max_cell_color', 'min_cell_color', 'sec2_align'
+      'section_bg_color', 'primary_font_color', 'time_font_color',
+      'max_cell_color', 'min_cell_color', 'sec2_align', 'sec3_align'
     ];
 
     inputs.forEach(id => {
