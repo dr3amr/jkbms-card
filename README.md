@@ -57,66 +57,66 @@ A feature-rich, highly customizable Home Assistant Lovelace card designed to dis
 
 ## Card Overview & Sections
 
-1. **Section 1 (Header Status)**: Displays system total runtime, active charging, discharging, and balancing state[cite: 1].
-2. **Section 2 (Grid Data)**: Large voltage/current display header with customizable multi-column metric items[cite: 1].
-3. **Section 3 (Cell Details)**: Displays individual cell voltages and internal resistances with dynamic highest/lowest voltage highlighting[cite: 1].
-4. **Section 4 (Control Switches)**: Interactive switches to toggle balancing, charging, and discharging modes[cite: 1].
+1. **Section 1 (Header Status)**: Displays system total runtime, active charging, discharging, and balancing state.
+2. **Section 2 (Grid Data)**: Large voltage/current display header with customizable multi-column metric items.
+3. **Section 3 (Cell Details)**: Displays individual cell voltages and internal resistances with dynamic highest/lowest voltage highlighting.
+4. **Section 4 (Control Switches)**: Interactive switches to toggle balancing, charging, and discharging modes.
 
 ## Dashboard Configuration
 
 ### Using Visual UI Editor (Recommended)
 
-The card includes a visual editor accessible via the dashboard edit interface[cite: 1]:
-- General Settings: Define Device Prefix and Cell Count[cite: 1].
-- Formatting & Units: Configure decimal places for Section 2 headers & Section 3 cell voltages, and toggle mΩ internal resistance conversion[cite: 1].
-- Section Font Sizes: Adjust pixel sizes individually across all four sections[cite: 1].
-- Section Visibility: Enable or disable sections and headers independently[cite: 1].
+The card includes a visual editor accessible via the dashboard edit interface:
+- General Settings: Define Device Prefix and Cell Count.
+- Formatting & Units: Configure decimal places for Section 2 headers & Section 3 cell voltages, and toggle mΩ internal resistance conversion.
+- Section Font Sizes: Adjust pixel sizes individually across all four sections.
+- Section Visibility: Enable or disable sections and headers independently.
 - Styling & Alignment:
-  - Color pickers for Section Background Color, Primary Font Color, Time Font Color, Max Cell Voltage Color, and Min Cell Voltage Color[cite: 1].
-  - Alignment selectors for Section 2 and Section 3[cite: 1].
-  - Checkboxes for transparent section background and custom value coloring[cite: 1].
+  - Color pickers for Section Background Color, Primary Font Color, Time Font Color, Max Cell Voltage Color, and Min Cell Voltage Color.
+  - Alignment selectors for Section 2 and Section 3.
+  - Checkboxes for transparent section background and custom value coloring.
 - Section 2 Display Items:
-  - Click + Add Item to append a new metric[cite: 1].
-  - Use ▲ / ▼ buttons to reorder metrics[cite: 1].
-  - Set custom labels, suffixes, units, decimals, column assignment, or override entities[cite: 1].
+  - Click + Add Item to append a new metric.
+  - Use ▲ / ▼ buttons to reorder metrics.
+  - Set custom labels, suffixes, units, decimals, column assignment, or override entities.
 
 ### YAML Configuration Example
 
-Below is the complete list of available YAML options for the card[cite: 1]:
+Below is the complete list of available YAML options for the card:
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `type` | `string` | **Required** | Must be `custom:jk-bms-card`[cite: 1]. |
-| `prefix` | `string` | `jk-bms` | Prefix applied to automatically construct entity IDs[cite: 1]. |
-| `cell_count` | `number` | `16` | Number of battery cells to display in Section 3[cite: 1]. |
-| `show_section_1` | `boolean` | `true` | Show or hide Section 1[cite: 1]. |
-| `show_section_2` | `boolean` | `true` | Show or hide Section 2[cite: 1]. |
-| `show_section_2_header` | `boolean` | `true` | Show or hide the main Voltage & Amperage header in Section 2[cite: 1]. |
-| `show_section_3` | `boolean` | `true` | Show or hide Section 3[cite: 1]. |
-| `show_cells_title` | `boolean` | `true` | Show or hide the "Cells" title in Section 3[cite: 1]. |
-| `show_section_4` | `boolean` | `true` | Show or hide Section 4[cite: 1]. |
-| `use_mohm_res` | `boolean` | `false` | Convert cell resistance to mΩ with 0 decimal places[cite: 1]. |
-| `sec2_header_decimals` | `number` | `1` | Decimal places for main Voltage and Current in Section 2[cite: 1]. |
-| `sec3_decimals` | `number` | `1` | Decimal places for cell voltages in Section 3[cite: 1]. |
-| `sec2_align` | `string` | `center` | Alignment for Section 2 rows (`center`, `space-between`, `flex-start`, `flex-end`)[cite: 1]. |
-| `sec3_align` | `string` | `center` | Alignment for Section 3 cell rows (`center`, `space-between`, `flex-start`, `flex-end`)[cite: 1]. |
-| `s1_font_size` | `number` | `15` | Font size in pixels for Section 1[cite: 1]. |
-| `s2_header_font_size` | `number` | `28` | Font size in pixels for Section 2 main values[cite: 1]. |
-| `s2_font_size` | `number` | `14` | Font size in pixels for Section 2 labels[cite: 1]. |
-| `s3_font_size` | `number` | `14` | Font size in pixels for Section 3[cite: 1]. |
-| `s4_font_size` | `number` | `15` | Font size in pixels for Section 4[cite: 1]. |
-| `use_primary_color_sec2` | `boolean` | `false` | Use Primary Font Color for Section 2 data values[cite: 1]. |
-| `remove_section_bg` | `boolean` | `false` | Set section backgrounds to transparent[cite: 1]. |
-| `section_bg_color` | `string` | `#121212` | Background color for sections[cite: 1]. |
-| `primary_font_color` | `string` | `#2e7d32` | Accent color for main values and status[cite: 1]. |
-| `time_font_color` | `string` | `#2196f3` | Accent color for total runtime[cite: 1]. |
-| `max_cell_color` | `string` | `#2196f3` | Color highlight for highest cell voltage[cite: 1]. |
-| `min_cell_color` | `string` | `#f44336` | Color highlight for lowest cell voltage[cite: 1]. |
-| `sec2_items` | `list` | *Default set* | Array of configurable metrics for Section 2[cite: 1]. |
+| `type` | `string` | **Required** | Must be `custom:jk-bms-card`. |
+| `prefix` | `string` | `jk-bms` | Prefix applied to automatically construct entity IDs. |
+| `cell_count` | `number` | `16` | Number of battery cells to display in Section 3. |
+| `show_section_1` | `boolean` | `true` | Show or hide Section 1. |
+| `show_section_2` | `boolean` | `true` | Show or hide Section 2. |
+| `show_section_2_header` | `boolean` | `true` | Show or hide the main Voltage & Amperage header in Section 2. |
+| `show_section_3` | `boolean` | `true` | Show or hide Section 3. |
+| `show_cells_title` | `boolean` | `true` | Show or hide the "Cells" title in Section 3. |
+| `show_section_4` | `boolean` | `true` | Show or hide Section 4. |
+| `use_mohm_res` | `boolean` | `false` | Convert cell resistance to mΩ with 0 decimal places. |
+| `sec2_header_decimals` | `number` | `1` | Decimal places for main Voltage and Current in Section 2. |
+| `sec3_decimals` | `number` | `1` | Decimal places for cell voltages in Section 3. |
+| `sec2_align` | `string` | `center` | Alignment for Section 2 rows (`center`, `space-between`, `flex-start`, `flex-end`). |
+| `sec3_align` | `string` | `center` | Alignment for Section 3 cell rows (`center`, `space-between`, `flex-start`, `flex-end`). |
+| `s1_font_size` | `number` | `15` | Font size in pixels for Section 1. |
+| `s2_header_font_size` | `number` | `28` | Font size in pixels for Section 2 main values. |
+| `s2_font_size` | `number` | `14` | Font size in pixels for Section 2 labels. |
+| `s3_font_size` | `number` | `14` | Font size in pixels for Section 3. |
+| `s4_font_size` | `number` | `15` | Font size in pixels for Section 4. |
+| `use_primary_color_sec2` | `boolean` | `false` | Use Primary Font Color for Section 2 data values. |
+| `remove_section_bg` | `boolean` | `false` | Set section backgrounds to transparent. |
+| `section_bg_color` | `string` | `#121212` | Background color for sections. |
+| `primary_font_color` | `string` | `#2e7d32` | Accent color for main values and status. |
+| `time_font_color` | `string` | `#2196f3` | Accent color for total runtime. |
+| `max_cell_color` | `string` | `#2196f3` | Color highlight for highest cell voltage. |
+| `min_cell_color` | `string` | `#f44336` | Color highlight for lowest cell voltage. |
+| `sec2_items` | `list` | *Default set* | Array of configurable metrics for Section 2. |
 
 ### Section 2 Item Structure
 
-Each item in the `sec2_items` array supports the following keys[cite: 1]:
+Each item in the `sec2_items` array supports the following keys:
 
 ```yaml
 sec2_items:
